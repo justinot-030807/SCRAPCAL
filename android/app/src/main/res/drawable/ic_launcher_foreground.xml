@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Outer calculator frame -->
+    <path
+        android:fillColor="#FAFAFA"
+        android:pathData="M31,26h46c2.76,0 5,2.24 5,5v46c0,2.76 -2.24,5 -5,5H31c-2.76,0 -5,-2.24 -5,-5V31c0,-2.76 2.24,-5 5,-5z" />
+    <!-- Inner dark calculator body -->
+    <path
+        android:fillColor="#111111"
+        android:pathData="M33,28h42c1.66,0 3,1.34 3,3v42c0,1.66 -1.34,3 -3,3H33c-1.66,0 -3,-1.34 -3,-3V31c0,-1.66 1.34,-3 3,-3z" />
+    <!-- Calculator display window -->
+    <path
+        android:fillColor="#FAFAFA"
+        android:pathData="M35,33h38v13H35z" />
+    <!-- Bold SC inside display or grid keys below -->
+    <!-- Key Row 1 -->
+    <path
+        android:fillColor="#FAFAFA"
+        android:pathData="M35,51h10v9H35zM49,51h10v9H49zM63,51h10v9H63z" />
+    <!-- Key Row 2 -->
+    <path
+        android:fillColor="#FAFAFA"
+        android:pathData="M35,64h10v9H35zM49,64h10v9H49zM63,64h10v9H63z" />
+    <!-- Display readout tick on right of LCD -->
+    <path
+        android:fillColor="#111111"
+        android:pathData="M56,37h13v5H56z" />
+</vector>
