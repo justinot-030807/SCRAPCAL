@@ -1,25 +1,23 @@
 # SCRAPCAL Design System (`DESIGN.md`)
 
 ## Visual Philosophy
-- **Mode:** Operate (Tactile Handheld Printing Calculator)
-- **Scene:** Outdoor / open-air Philippine junkshop weighing station under direct sunlight.
-- **Appearance:** High-contrast Light Mode only (`#FAFAFA` scaffold, `#FFFFFF` keys/tape, `#111111` primary ink, `#E4E4E7` 1px hairline borders).
+- **Mode:** Operate (Senior-Friendly Tactile Handheld Printing Calculator)
+- **Scene:** Outdoor / open-air Philippine junkshop weighing station, tailored for older junkshop owners who need large type, unmistakable button boundaries, and zero-confusion labels.
+- **Appearance:** High-contrast Green & Light Green Mode (`#F2FBF5` soft mint scaffold, `#15803D` deep emerald headers & primary actions, `#DCFCE7` light-green quick-add keys & active calculation banner, `#FFFFFF` pure white digit keys with `#0F172A` large bold numbers).
 
 ## Color Tokens
 | Token | Hex | Purpose |
 |---|---|---|
-| `AppColors.scaffold` | `#FAFAFA` | Main screen background & Android window launch background |
-| `AppColors.surface` | `#FFFFFF` | Calculator keys, ticket tape paper, and cards |
-| `AppColors.keySecondary` | `#F4F4F5` | Quick-add increment keys, secondary controls, tape header |
-| `AppColors.ink` | `#111111` | Primary text, active chip fill, primary `SAVE` key |
-| `AppColors.inkSecondary` | `#52525B` | Unit rates, timestamps, section headers |
-| `AppColors.inkMuted` | `#71717A` | Empty state hints and input placeholders |
-| `AppColors.border` | `#E4E4E7` | 1px hairline key borders and list dividers |
-| `AppColors.danger` | `#DC2626` | Clear (`C`), Reset ticket, and delete actions |
+| `AppColors.scaffold` | `#F2FBF5` | Soft light-green screen background & Android launch background |
+| `AppColors.primaryGreen` | `#15803D` | Header bar, active scrap chip fill, and primary `SAVE` key |
+| `AppColors.primaryGreenDark` | `#14532D` | High-contrast dark green text on light-green buttons |
+| `AppColors.lightGreenBg` | `#DCFCE7` | Quick-add increment keys, active calculation bar, summary banners |
+| `AppColors.lightGreenBorder` | `#86EFAC` | Borders for green cards, chips, and quick-add buttons |
+| `AppColors.surface` | `#FFFFFF` | Calculator digit keys, ticket tape paper, and item cards |
+| `AppColors.ink` | `#0F172A` | Extra-sharp dark text for numbers and item names |
+| `AppColors.danger` | `#B91C1C` | Clear (`BURA / C`), Reset ticket, and delete actions |
 
-## Typography & Numerals
-- All numerical values, weights, piece counts, timestamps, and `₱` currency figures enforce `FontFeature.tabularFigures()` so digits align vertically in running tapes and live subtotals without horizontal jitter.
-
-## Tactile & Ergonomic Rules
-- Single-screen non-scrolling keypad layout: Header (`48dp`), Ticket Tape & Live Display (`Expanded`), Scrap Selector Strip (`40dp`), Context-Aware Quick-Add Row (`38dp`), and 4-Column Numpad (`Expanded`).
-- Every keypad, quick-add, and chip interaction triggers `HapticFeedback.lightImpact()`.
+## Typography & Senior Accessibility
+- **Extra-Large Numerals:** Keypad digits at `26sp` bold (`FontWeight.w800`), Grand Total at `26-28sp` black (`FontWeight.w900`), and ticket tape rows at `14.5sp` bold so older users can read without glasses.
+- **Tabular Figures:** All numerical values, weights, piece counts, timestamps, and `₱` currency figures enforce `FontFeature.tabularFigures()`.
+- **Clear Tagalog Guidance:** Visible action hints (`PUMILI NG KALAKAL`, `LISTAHAN NG CUSTOMER`, `BURA`, `+ DAGDAG SA LISTA`, `SAVE / TAPOS`) and a dedicated one-tap `Reset` button on the ticket box so users never rely on hidden gestures.

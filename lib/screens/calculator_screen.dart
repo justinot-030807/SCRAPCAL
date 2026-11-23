@@ -112,7 +112,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
           return;
         }
       } else if (_input.length >= 6) {
-        // Prevent overflow beyond 999,999
         return;
       }
 
@@ -323,34 +322,54 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. Compact Header Bar
+            // 1. Senior-Friendly Green Header Bar
             Container(
-              height: 48,
+              height: 54,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: const BoxDecoration(
-                color: AppColors.scaffold,
-                border: Border(bottom: BorderSide(color: AppColors.border)),
+                color: AppColors.primaryGreen,
+                border: Border(
+                  bottom: BorderSide(
+                    color: AppColors.primaryGreenDark,
+                    width: 1.5,
+                  ),
+                ),
               ),
               child: Row(
                 children: [
+                  Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Icon(
+                      Icons.calculate_outlined,
+                      color: AppColors.surface,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   const Text(
                     'SCRAPCAL',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 19,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 0.6,
-                      color: AppColors.ink,
+                      color: AppColors.surface,
                     ),
                   ),
                   const Spacer(),
                   _HeaderNavButton(
                     key: const Key('nav_presyo_btn'),
+                    icon: Icons.sell_outlined,
                     label: 'Presyo',
                     onTap: () => _openPresyo(),
                   ),
                   const SizedBox(width: 8),
                   _HeaderNavButton(
                     key: const Key('nav_history_btn'),
+                    icon: Icons.receipt_long_outlined,
                     label: 'History',
                     badgeCount: _history.length,
                     onTap: _openHistory,
@@ -366,8 +385,11 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                 margin: const EdgeInsets.fromLTRB(10, 8, 10, 6),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.border),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.lightGreenBorder,
+                    width: 1.5,
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -376,12 +398,12 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
-                        vertical: 5,
+                        vertical: 6,
                       ),
                       decoration: const BoxDecoration(
-                        color: AppColors.keySecondary,
+                        color: AppColors.lightGreenSurface,
                         borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(7),
+                          top: Radius.circular(8),
                         ),
                         border: Border(
                           bottom: BorderSide(color: AppColors.border),
@@ -389,31 +411,44 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                       ),
                       child: Row(
                         children: [
+                          const Icon(
+                            Icons.playlist_add_check_rounded,
+                            size: 18,
+                            color: AppColors.primaryGreenDark,
+                          ),
+                          const SizedBox(width: 6),
                           Text(
-                            'TICKET (${_ticketLines.length} ${_ticketLines.length == 1 ? 'ITEM' : 'ITEMS'})',
+                            'LISTAHAN (${_ticketLines.length} ${_ticketLines.length == 1 ? 'ITEM' : 'ITEMS'})',
                             style: AppTheme.tabularText(
-                              fontSize: 11,
+                              fontSize: 12,
                               fontWeight: FontWeight.w800,
-                              color: AppColors.inkSecondary,
-                              letterSpacing: 0.5,
+                              color: AppColors.primaryGreenDark,
+                              letterSpacing: 0.4,
                             ),
                           ),
                           const Spacer(),
                           if (_ticketLines.isNotEmpty || _input != '0')
                             InkWell(
                               key: const Key('reset_ticket_btn'),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(6),
                               onTap: _onResetTicket,
-                              child: const Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
                                 ),
-                                child: Text(
+                                decoration: BoxDecoration(
+                                  color: AppColors.dangerBg,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: AppColors.dangerBorder,
+                                  ),
+                                ),
+                                child: const Text(
                                   'Reset',
                                   style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
                                     color: AppColors.danger,
                                   ),
                                 ),
@@ -432,10 +467,12 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                   horizontal: 16,
                                 ),
                                 child: Text(
-                                  'Pumili ng scrap item sa ibaba, ilagay ang kilo o piraso, at pindutin ang + DAGDAG o SAVE.',
+                                  '1. Pumili ng kalakal sa ibaba (Bakal, Plastic, Bote...)\n2. Pindutin ang timbang o bilang, tapos + DAGDAG o SAVE.',
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    height: 1.35,
                                     color: AppColors.inkMuted,
                                   ),
                                 ),
@@ -457,16 +494,36 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                 final line = _ticketLines[index];
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(
-                                    vertical: 4,
+                                    vertical: 5,
                                   ),
                                   child: Row(
                                     children: [
+                                      Container(
+                                        width: 22,
+                                        height: 22,
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.lightGreenBg,
+                                          borderRadius: BorderRadius.circular(
+                                            11,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '${index + 1}',
+                                          style: AppTheme.tabularText(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w800,
+                                            color: AppColors.primaryGreenDark,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
                                       Expanded(
                                         child: Text(
                                           line.formattedTapeSummary,
                                           style: AppTheme.tabularText(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w700,
                                             color: AppColors.ink,
                                           ),
                                         ),
@@ -475,16 +532,16 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                       InkWell(
                                         key: Key('remove_line_${line.id}'),
                                         onTap: () => _removeTicketLine(line.id),
-                                        borderRadius: BorderRadius.circular(4),
+                                        borderRadius: BorderRadius.circular(6),
                                         child: Container(
                                           padding: const EdgeInsets.symmetric(
-                                            horizontal: 6,
-                                            vertical: 2,
+                                            horizontal: 8,
+                                            vertical: 3,
                                           ),
                                           decoration: BoxDecoration(
                                             color: AppColors.dangerBg,
                                             borderRadius: BorderRadius.circular(
-                                              4,
+                                              6,
                                             ),
                                             border: Border.all(
                                               color: AppColors.dangerBorder,
@@ -493,8 +550,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                           child: const Text(
                                             '×',
                                             style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w800,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w900,
                                               color: AppColors.danger,
                                             ),
                                           ),
@@ -507,35 +564,37 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                             ),
                     ),
 
-                    // Active Calculation Bar
+                    // Active Calculation Bar (Light Green Highlighted Box)
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
-                        vertical: 7,
+                        vertical: 8,
                       ),
                       decoration: const BoxDecoration(
-                        color: AppColors.scaffold,
+                        color: AppColors.lightGreenBg,
                         border: Border(
-                          top: BorderSide(color: AppColors.border),
-                          bottom: BorderSide(color: AppColors.border),
+                          top: BorderSide(
+                            color: AppColors.lightGreenBorder,
+                            width: 1.2,
+                          ),
                         ),
                       ),
                       child: Row(
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 3,
+                              horizontal: 9,
+                              vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.ink,
-                              borderRadius: BorderRadius.circular(4),
+                              color: AppColors.primaryGreen,
+                              borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               _selectedItem.name,
                               key: const Key('active_scrap_name'),
                               style: const TextStyle(
-                                fontSize: 12,
+                                fontSize: 13,
                                 fontWeight: FontWeight.w800,
                                 color: AppColors.surface,
                               ),
@@ -549,9 +608,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppTheme.tabularText(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.ink,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.primaryGreenDark,
                               ),
                             ),
                           ),
@@ -560,20 +619,26 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                             ScrapMath.formatPeso(_activeSubtotal),
                             key: const Key('active_subtotal_text'),
                             style: AppTheme.tabularText(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.ink,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.primaryGreenDark,
                             ),
                           ),
                         ],
                       ),
                     ),
 
-                    // Grand Total Row
-                    Padding(
+                    // Grand Total Row (High-Contrast Deep Forest Green Banner)
+                    Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 7,
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: const BoxDecoration(
+                        color: AppColors.primaryGreenDark,
+                        borderRadius: BorderRadius.vertical(
+                          bottom: Radius.circular(8),
+                        ),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -581,19 +646,19 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                           const Text(
                             'KABUUAN / TOTAL',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 13,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 0.5,
-                              color: AppColors.inkSecondary,
+                              color: AppColors.lightGreenBg,
                             ),
                           ),
                           Text(
                             ScrapMath.formatPeso(_grandTotal),
                             key: const Key('grand_total_text'),
                             style: AppTheme.tabularText(
-                              fontSize: 24,
+                              fontSize: 26,
                               fontWeight: FontWeight.w900,
-                              color: AppColors.ink,
+                              color: AppColors.surface,
                             ),
                           ),
                         ],
@@ -606,7 +671,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
             // 3. Scrap Selector Strip (SingleChildScrollView horizontal)
             SizedBox(
-              height: 40,
+              height: 44,
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -615,7 +680,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                     ..._items.map((item) {
                       final isSelected = item.id == _selectedItem.id;
                       return Padding(
-                        padding: const EdgeInsets.only(right: 6),
+                        padding: const EdgeInsets.only(right: 8),
                         child: _ScrapSelectorChip(
                           key: Key('chip_${item.id}'),
                           label: item.chipLabel,
@@ -642,31 +707,35 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: SizedBox(
-                height: 38,
+                height: 42,
                 child: Row(
                   children: isPiece
                       ? [
                           _QuickAddKey(
                             key: const Key('quick_add_pc_1'),
                             label: '+1',
+                            subLabel: 'pc',
                             onTap: () => _onQuickAdd(1),
                           ),
                           const SizedBox(width: 6),
                           _QuickAddKey(
                             key: const Key('quick_add_pc_5'),
                             label: '+5',
+                            subLabel: 'pcs',
                             onTap: () => _onQuickAdd(5),
                           ),
                           const SizedBox(width: 6),
                           _QuickAddKey(
                             key: const Key('quick_add_pc_10'),
                             label: '+10',
+                            subLabel: 'pcs',
                             onTap: () => _onQuickAdd(10),
                           ),
                           const SizedBox(width: 6),
                           _QuickAddKey(
                             key: const Key('quick_add_pc_20'),
                             label: '+20',
+                            subLabel: 'pcs',
                             onTap: () => _onQuickAdd(20),
                           ),
                         ]
@@ -809,7 +878,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                 _KeypadButton(
                                   key: const Key('key_backspace'),
                                   label: '⌫',
-                                  backgroundColor: AppColors.keySecondary,
+                                  backgroundColor: AppColors.lightGreenSurface,
+                                  borderColor: AppColors.lightGreenBorder,
+                                  textColor: AppColors.primaryGreenDark,
                                   onTap: _onBackspace,
                                 ),
                               ],
@@ -819,7 +890,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    // Column 4: Action Controls (C, + DAGDAG, SAVE)
+                    // Column 4: Action Controls (C / BURA, + DAGDAG, SAVE)
                     Expanded(
                       flex: 1,
                       child: Column(
@@ -830,7 +901,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                             child: _ActionKeyButton(
                               key: const Key('key_clear'),
                               label: 'C',
-                              subLabel: 'HOLD RESET',
+                              subLabel: 'BURA',
                               backgroundColor: AppColors.dangerBg,
                               borderColor: AppColors.dangerBorder,
                               textColor: AppColors.danger,
@@ -844,10 +915,10 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                             child: _ActionKeyButton(
                               key: const Key('key_dagdag'),
                               label: '+ DAGDAG',
-                              subLabel: 'ADD ITEM',
-                              backgroundColor: AppColors.keySecondary,
-                              borderColor: AppColors.borderStrong,
-                              textColor: AppColors.ink,
+                              subLabel: 'SA LISTA',
+                              backgroundColor: AppColors.lightGreenBg,
+                              borderColor: AppColors.mediumGreen,
+                              textColor: AppColors.primaryGreenDark,
                               onTap: _onAddLineToTape,
                             ),
                           ),
@@ -857,8 +928,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                             child: _ActionKeyButton(
                               key: const Key('key_save'),
                               label: 'SAVE',
-                              backgroundColor: AppColors.ink,
-                              borderColor: AppColors.ink,
+                              subLabel: 'TAPOS NA',
+                              backgroundColor: AppColors.primaryGreen,
+                              borderColor: AppColors.primaryGreenDark,
                               textColor: AppColors.surface,
                               onTap: _onSaveTransaction,
                             ),
@@ -878,12 +950,14 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 }
 
 class _HeaderNavButton extends StatelessWidget {
+  final IconData icon;
   final String label;
   final int badgeCount;
   final VoidCallback onTap;
 
   const _HeaderNavButton({
     super.key,
+    required this.icon,
     required this.label,
     this.badgeCount = 0,
     required this.onTap,
@@ -893,47 +967,49 @@ class _HeaderNavButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.surface,
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(8),
         child: Container(
-          height: 34,
+          height: 38,
           padding: const EdgeInsets.symmetric(horizontal: 10),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.lightGreenBorder, width: 1.2),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              Icon(icon, size: 16, color: AppColors.primaryGreenDark),
+              const SizedBox(width: 5),
               Text(
                 label,
                 style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.ink,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primaryGreenDark,
                 ),
               ),
               if (badgeCount > 0) ...[
                 const SizedBox(width: 5),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 5,
+                    horizontal: 6,
                     vertical: 1,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.keySecondary,
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: AppColors.border),
+                    color: AppColors.lightGreenBg,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: AppColors.lightGreenBorder),
                   ),
                   child: Text(
                     badgeCount.toString(),
                     style: AppTheme.tabularText(
                       fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.inkSecondary,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.primaryGreenDark,
                     ),
                   ),
                 ),
@@ -963,32 +1039,48 @@ class _ScrapSelectorChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bgColor = selected
-        ? AppColors.ink
-        : (isAction ? AppColors.keySecondary : AppColors.surface);
-    final fgColor = selected ? AppColors.surface : AppColors.ink;
+        ? AppColors.primaryGreen
+        : (isAction ? AppColors.lightGreenBg : AppColors.surface);
+    final fgColor = selected ? AppColors.surface : AppColors.primaryGreenDark;
 
     return Material(
       color: bgColor,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(22),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 14),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: selected ? AppColors.ink : AppColors.border,
+              color: selected
+                  ? AppColors.primaryGreenDark
+                  : AppColors.lightGreenBorder,
+              width: selected ? 1.5 : 1.2,
             ),
           ),
-          child: Text(
-            label,
-            style: AppTheme.tabularText(
-              fontSize: 13,
-              fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-              color: fgColor,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (selected) ...[
+                const Icon(
+                  Icons.check_circle,
+                  size: 16,
+                  color: AppColors.surface,
+                ),
+                const SizedBox(width: 5),
+              ],
+              Text(
+                label,
+                style: AppTheme.tabularText(
+                  fontSize: 14,
+                  fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
+                  color: fgColor,
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -1012,16 +1104,19 @@ class _QuickAddKey extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Material(
-        color: AppColors.keySecondary,
-        borderRadius: BorderRadius.circular(6),
+        color: AppColors.lightGreenBg,
+        borderRadius: BorderRadius.circular(8),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(8),
           child: Container(
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: AppColors.border),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: AppColors.lightGreenBorder,
+                width: 1.5,
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1029,9 +1124,9 @@ class _QuickAddKey extends StatelessWidget {
                 Text(
                   label,
                   style: AppTheme.tabularText(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.ink,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.primaryGreenDark,
                   ),
                 ),
                 if (subLabel != null) ...[
@@ -1039,9 +1134,9 @@ class _QuickAddKey extends StatelessWidget {
                   Text(
                     '($subLabel)',
                     style: AppTheme.tabularText(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.inkSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primaryGreen,
                     ),
                   ),
                 ],
@@ -1059,6 +1154,8 @@ class _KeypadButton extends StatelessWidget {
   final VoidCallback onTap;
   final bool enabled;
   final Color backgroundColor;
+  final Color borderColor;
+  final Color textColor;
 
   const _KeypadButton({
     super.key,
@@ -1066,6 +1163,8 @@ class _KeypadButton extends StatelessWidget {
     required this.onTap,
     this.enabled = true,
     this.backgroundColor = AppColors.surface,
+    this.borderColor = AppColors.keyBorder,
+    this.textColor = AppColors.ink,
   });
 
   @override
@@ -1073,22 +1172,25 @@ class _KeypadButton extends StatelessWidget {
     return Expanded(
       child: Material(
         color: enabled ? backgroundColor : AppColors.scaffold,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
         child: InkWell(
           onTap: enabled ? onTap : null,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(10),
           child: Container(
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.border),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: enabled ? borderColor : AppColors.border,
+                width: 1.5,
+              ),
             ),
             child: Text(
               label,
               style: AppTheme.tabularText(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                color: enabled ? AppColors.ink : AppColors.borderStrong,
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                color: enabled ? textColor : AppColors.keyBorder,
               ),
             ),
           ),
@@ -1122,17 +1224,17 @@ class _ActionKeyButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: backgroundColor,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(10),
       child: InkWell(
         onTap: onTap,
         onLongPress: onLongPress,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 6),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: borderColor),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: borderColor, width: 1.5),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1142,7 +1244,7 @@ class _ActionKeyButton extends StatelessWidget {
                 child: Text(
                   label,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 16,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0.3,
                     color: textColor,
@@ -1156,9 +1258,9 @@ class _ActionKeyButton extends StatelessWidget {
                   child: Text(
                     subLabel!,
                     style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
-                      color: textColor.withValues(alpha: 0.75),
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                      color: textColor.withValues(alpha: 0.85),
                     ),
                   ),
                 ),

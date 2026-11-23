@@ -42,20 +42,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(10),
+          side: const BorderSide(color: AppColors.lightGreenBorder),
         ),
         title: const Text(
-          'Clear All History?',
+          'Burahin Lahat ng History?',
           style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
             color: AppColors.ink,
           ),
         ),
         content: const Text(
           'Mabubura nang tuluyan ang lahat ng naka-save na transaksyon sa teleponong ito.',
-          style: TextStyle(fontSize: 14, color: AppColors.inkSecondary),
+          style: TextStyle(fontSize: 15, color: AppColors.inkSecondary),
         ),
         actions: [
           TextButton(
@@ -96,14 +96,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return Scaffold(
       backgroundColor: AppColors.scaffold,
       appBar: AppBar(
-        titleSpacing: 12,
+        titleSpacing: 8,
         title: const Text(
-          'TRANSACTION HISTORY',
+          'LISTAHAN NG BENTA / HISTORY',
           style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w800,
+            fontSize: 16,
+            fontWeight: FontWeight.w900,
             letterSpacing: 0.4,
-            color: AppColors.ink,
+            color: AppColors.surface,
           ),
         ),
         actions: [
@@ -117,36 +117,35 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   side: const BorderSide(color: AppColors.dangerBorder),
                   backgroundColor: AppColors.dangerBg,
                   padding: const EdgeInsets.symmetric(horizontal: 10),
-                  minimumSize: const Size(0, 34),
+                  minimumSize: const Size(0, 36),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
                 onPressed: _confirmClearAll,
                 child: const Text(
                   'Clear All History',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
                 ),
               ),
             ),
         ],
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, thickness: 1, color: AppColors.border),
-        ),
       ),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Top Summary Card: Total Ngayon
+            // Top Summary Card: Total Ngayon (Rich Green Banner)
             Container(
               margin: const EdgeInsets.all(12),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.border),
+                color: AppColors.lightGreenBg,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppColors.lightGreenBorder,
+                  width: 1.5,
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -157,18 +156,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       const Text(
                         'Total Ngayon',
                         style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.ink,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.primaryGreenDark,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Text(
                         '${todayTx.length} ${todayTx.length == 1 ? 'transaction' : 'transactions'} today',
                         style: AppTheme.tabularText(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.inkSecondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primaryGreen,
                         ),
                       ),
                     ],
@@ -177,9 +176,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ScrapMath.formatPeso(todayTotal),
                     key: const Key('today_total_payout'),
                     style: AppTheme.tabularText(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.ink,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.primaryGreenDark,
                     ),
                   ),
                 ],
@@ -193,20 +192,27 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: const [
+                            Icon(
+                              Icons.receipt_long_outlined,
+                              size: 44,
+                              color: AppColors.primaryGreen,
+                            ),
+                            SizedBox(height: 10),
                             Text(
-                              'Walang naka-save na transaksyon',
+                              'Wala pang naka-save na transaksyon',
                               style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.inkSecondary,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.primaryGreenDark,
                               ),
                             ),
-                            SizedBox(height: 4),
+                            SizedBox(height: 6),
                             Text(
                               'Pindutin ang SAVE sa calculator pagkatapos magtimbang upang ma-record ang payout.',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
                                 color: AppColors.inkMuted,
                               ),
                             ),
@@ -217,51 +223,69 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
                       itemCount: _history.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 8),
+                      separatorBuilder: (_, _) => const SizedBox(height: 10),
                       itemBuilder: (context, index) {
                         final tx = _history[index];
                         return Container(
                           key: Key('history_tx_${tx.id}'),
                           decoration: BoxDecoration(
                             color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: AppColors.border),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: AppColors.lightGreenBorder,
+                              width: 1.5,
+                            ),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(14),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Row(
                                   children: [
+                                    const Icon(
+                                      Icons.schedule,
+                                      size: 16,
+                                      color: AppColors.primaryGreen,
+                                    ),
+                                    const SizedBox(width: 6),
                                     Expanded(
                                       child: Text(
                                         tx.formattedTimestamp,
                                         style: AppTheme.tabularText(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.inkSecondary,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppColors.primaryGreenDark,
                                         ),
                                       ),
                                     ),
                                     Text(
                                       ScrapMath.formatPeso(tx.grandTotal),
                                       style: AppTheme.tabularText(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.w800,
-                                        color: AppColors.ink,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w900,
+                                        color: AppColors.primaryGreenDark,
                                       ),
                                     ),
-                                    const SizedBox(width: 6),
+                                    const SizedBox(width: 8),
                                     InkWell(
                                       key: Key('delete_tx_${tx.id}'),
-                                      borderRadius: BorderRadius.circular(4),
+                                      borderRadius: BorderRadius.circular(6),
                                       onTap: () => _deleteTransaction(tx.id),
-                                      child: const Padding(
-                                        padding: EdgeInsets.all(4),
-                                        child: Icon(
+                                      child: Container(
+                                        padding: const EdgeInsets.all(6),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.dangerBg,
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                          border: Border.all(
+                                            color: AppColors.dangerBorder,
+                                          ),
+                                        ),
+                                        child: const Icon(
                                           Icons.delete_outline,
-                                          size: 18,
+                                          size: 20,
                                           color: AppColors.danger,
                                         ),
                                       ),
@@ -269,7 +293,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                   ],
                                 ),
                                 const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  padding: EdgeInsets.symmetric(vertical: 10),
                                   child: Divider(
                                     height: 1,
                                     thickness: 1,
@@ -279,7 +303,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 ...tx.lines.map(
                                   (line) => Padding(
                                     padding: const EdgeInsets.symmetric(
-                                      vertical: 2,
+                                      vertical: 3,
                                     ),
                                     child: Row(
                                       mainAxisAlignment:
@@ -289,8 +313,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                           child: Text(
                                             '${line.itemName} · ${line.formattedCalculation}',
                                             style: AppTheme.tabularText(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w500,
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w700,
                                               color: AppColors.ink,
                                             ),
                                           ),
@@ -299,9 +323,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                         Text(
                                           ScrapMath.formatPeso(line.subtotal),
                                           style: AppTheme.tabularText(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColors.ink,
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w800,
+                                            color: AppColors.primaryGreenDark,
                                           ),
                                         ),
                                       ],

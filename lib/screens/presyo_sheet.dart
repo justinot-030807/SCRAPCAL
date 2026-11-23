@@ -114,15 +114,15 @@ class _PresyoScreenState extends State<PresyoScreen> {
             return AlertDialog(
               backgroundColor: AppColors.surface,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-                side: const BorderSide(color: AppColors.border),
+                borderRadius: BorderRadius.circular(10),
+                side: const BorderSide(color: AppColors.lightGreenBorder),
               ),
               title: const Text(
-                'Edit Scrap Item',
+                'Baguhin ang Kalakal',
                 style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.ink,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primaryGreenDark,
                 ),
               ),
               content: Column(
@@ -131,8 +131,12 @@ class _PresyoScreenState extends State<PresyoScreen> {
                 children: [
                   TextField(
                     controller: nameCtrl,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
                     decoration: const InputDecoration(
-                      labelText: 'Item Name',
+                      labelText: 'Pangalan ng Kalakal',
                       isDense: true,
                       border: OutlineInputBorder(),
                     ),
@@ -168,11 +172,11 @@ class _PresyoScreenState extends State<PresyoScreen> {
                       decimal: true,
                     ),
                     style: AppTheme.tabularText(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
                     ),
                     decoration: const InputDecoration(
-                      labelText: 'Price (₱)',
+                      labelText: 'Presyo (₱)',
                       prefixText: '₱ ',
                       isDense: true,
                       border: OutlineInputBorder(),
@@ -187,7 +191,7 @@ class _PresyoScreenState extends State<PresyoScreen> {
                 ),
                 FilledButton(
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.ink,
+                    backgroundColor: AppColors.primaryGreen,
                     foregroundColor: AppColors.surface,
                   ),
                   onPressed: () {
@@ -229,7 +233,7 @@ class _PresyoScreenState extends State<PresyoScreen> {
     final price = double.tryParse(priceRaw);
 
     if (name.isEmpty) {
-      setState(() => _formError = 'Ilagay ang pangalan ng scrap item.');
+      setState(() => _formError = 'Ilagay ang pangalan ng kalakal.');
       return;
     }
     if (price == null || price <= 0) {
@@ -277,20 +281,20 @@ class _PresyoScreenState extends State<PresyoScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(10),
+          side: const BorderSide(color: AppColors.lightGreenBorder),
         ),
         title: const Text(
-          'Reset Default Prices?',
+          'Ibalik sa Default na Presyo?',
           style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
             color: AppColors.ink,
           ),
         ),
         content: const Text(
           'Ibabalik nito ang Bakal (₱15/kg), Plastic (₱10/kg), Tanso (₱350/kg), at Bote (₱1/pc). Mabubura ang mga idinagdag na custom items.',
-          style: TextStyle(fontSize: 14, color: AppColors.inkSecondary),
+          style: TextStyle(fontSize: 15, color: AppColors.inkSecondary),
         ),
         actions: [
           TextButton(
@@ -323,14 +327,14 @@ class _PresyoScreenState extends State<PresyoScreen> {
     return Scaffold(
       backgroundColor: AppColors.scaffold,
       appBar: AppBar(
-        titleSpacing: 12,
+        titleSpacing: 8,
         title: const Text(
-          'PRESYO & SCRAP ITEMS',
+          'PRESYO NG KALAKAL',
           style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w800,
+            fontSize: 17,
+            fontWeight: FontWeight.w900,
             letterSpacing: 0.4,
-            color: AppColors.ink,
+            color: AppColors.surface,
           ),
         ),
         actions: [
@@ -342,23 +346,19 @@ class _PresyoScreenState extends State<PresyoScreen> {
                 side: const BorderSide(color: AppColors.dangerBorder),
                 backgroundColor: AppColors.dangerBg,
                 padding: const EdgeInsets.symmetric(horizontal: 10),
-                minimumSize: const Size(0, 34),
+                minimumSize: const Size(0, 36),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
               onPressed: _confirmResetDefaults,
               child: const Text(
                 'Reset Defaults',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
               ),
             ),
           ),
         ],
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, thickness: 1, color: AppColors.border),
-        ),
       ),
       body: SafeArea(
         child: ListView(
@@ -366,23 +366,36 @@ class _PresyoScreenState extends State<PresyoScreen> {
           children: [
             // Add New Scrap Form
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.border),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppColors.lightGreenBorder,
+                  width: 1.5,
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    'ADD NEW SCRAP ITEM',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.5,
-                      color: AppColors.inkSecondary,
-                    ),
+                  Row(
+                    children: const [
+                      Icon(
+                        Icons.add_circle_outline,
+                        size: 18,
+                        color: AppColors.primaryGreen,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        'MAGDAGDAG NG BAGONG KALAKAL',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.4,
+                          color: AppColors.primaryGreenDark,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 10),
                   Row(
@@ -395,26 +408,26 @@ class _PresyoScreenState extends State<PresyoScreen> {
                           focusNode: _newNameFocus,
                           textCapitalization: TextCapitalization.words,
                           style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
                             color: AppColors.ink,
                           ),
                           decoration: InputDecoration(
-                            hintText: 'Name (e.g. Aluminum, Karton)',
+                            hintText: 'Pangalan (hal. Aluminum, Karton)',
                             hintStyle: const TextStyle(
                               fontSize: 13,
                               color: AppColors.inkMuted,
-                              fontWeight: FontWeight.w400,
+                              fontWeight: FontWeight.w500,
                             ),
                             isDense: true,
                             contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 10,
+                              horizontal: 12,
+                              vertical: 12,
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(8),
                               borderSide: const BorderSide(
-                                color: AppColors.border,
+                                color: AppColors.lightGreenBorder,
                               ),
                             ),
                           ),
@@ -430,25 +443,26 @@ class _PresyoScreenState extends State<PresyoScreen> {
                             decimal: true,
                           ),
                           style: AppTheme.tabularText(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
                           ),
                           decoration: InputDecoration(
                             hintText: '0.00',
                             prefixText: '₱ ',
                             prefixStyle: AppTheme.tabularText(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.primaryGreenDark,
                             ),
                             isDense: true,
                             contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 10,
+                              horizontal: 12,
+                              vertical: 12,
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(8),
                               borderSide: const BorderSide(
-                                color: AppColors.border,
+                                color: AppColors.lightGreenBorder,
                               ),
                             ),
                           ),
@@ -456,7 +470,7 @@ class _PresyoScreenState extends State<PresyoScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
                       Expanded(
@@ -486,32 +500,32 @@ class _PresyoScreenState extends State<PresyoScreen> {
                       FilledButton(
                         key: const Key('add_scrap_submit_btn'),
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.ink,
+                          backgroundColor: AppColors.primaryGreen,
                           foregroundColor: AppColors.surface,
-                          minimumSize: const Size(88, 38),
+                          minimumSize: const Size(96, 42),
                           padding: const EdgeInsets.symmetric(horizontal: 14),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
                         onPressed: _addNewScrap,
                         child: const Text(
                           '+ Add Item',
                           style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                       ),
                     ],
                   ),
                   if (_formError != null) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     Text(
                       _formError!,
                       style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
                         color: AppColors.danger,
                       ),
                     ),
@@ -519,16 +533,16 @@ class _PresyoScreenState extends State<PresyoScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 4),
               child: Text(
-                'ACTIVE SCRAP PRICE LIST (AUTO-SAVES)',
+                'LISTAHAN NG PRESYO (KUSANG NASE-SAVE)',
                 style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.5,
-                  color: AppColors.inkSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.4,
+                  color: AppColors.primaryGreenDark,
                 ),
               ),
             ),
@@ -536,8 +550,11 @@ class _PresyoScreenState extends State<PresyoScreen> {
             Container(
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.border),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppColors.lightGreenBorder,
+                  width: 1.5,
+                ),
               ),
               child: ListView.separated(
                 shrinkWrap: true,
@@ -554,7 +571,7 @@ class _PresyoScreenState extends State<PresyoScreen> {
                   return Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
-                      vertical: 8,
+                      vertical: 10,
                     ),
                     child: Row(
                       children: [
@@ -567,32 +584,32 @@ class _PresyoScreenState extends State<PresyoScreen> {
                                 Text(
                                   item.name,
                                   style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w800,
                                     color: AppColors.ink,
                                   ),
                                 ),
-                                const SizedBox(height: 2),
+                                const SizedBox(height: 4),
                                 GestureDetector(
                                   onTap: () => _toggleItemUnit(item),
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 2,
+                                      horizontal: 8,
+                                      vertical: 3,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: AppColors.keySecondary,
-                                      borderRadius: BorderRadius.circular(4),
+                                      color: AppColors.lightGreenBg,
+                                      borderRadius: BorderRadius.circular(6),
                                       border: Border.all(
-                                        color: AppColors.border,
+                                        color: AppColors.lightGreenBorder,
                                       ),
                                     ),
                                     child: Text(
                                       item.unit.displayLabel,
                                       style: const TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.inkSecondary,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w800,
+                                        color: AppColors.primaryGreenDark,
                                       ),
                                     ),
                                   ),
@@ -602,7 +619,7 @@ class _PresyoScreenState extends State<PresyoScreen> {
                           ),
                         ),
                         SizedBox(
-                          width: 116,
+                          width: 126,
                           child: TextField(
                             key: Key('price_input_${item.id}'),
                             controller: ctrl,
@@ -612,31 +629,35 @@ class _PresyoScreenState extends State<PresyoScreen> {
                                 ),
                             textAlign: TextAlign.right,
                             style: AppTheme.tabularText(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.primaryGreenDark,
                             ),
                             onChanged: (val) => _onPriceEdited(item, val),
                             decoration: InputDecoration(
+                              filled: true,
+                              fillColor: AppColors.lightGreenSurface,
                               prefixText: '₱',
                               prefixStyle: AppTheme.tabularText(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.inkSecondary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.primaryGreenDark,
                               ),
                               suffixText: '/${item.unit.shortLabel}',
                               suffixStyle: const TextStyle(
-                                fontSize: 12,
-                                color: AppColors.inkMuted,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.inkSecondary,
                               ),
                               isDense: true,
                               contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 8,
+                                horizontal: 10,
+                                vertical: 10,
                               ),
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(8),
                                 borderSide: const BorderSide(
-                                  color: AppColors.border,
+                                  color: AppColors.lightGreenBorder,
                                 ),
                               ),
                             ),
@@ -648,8 +669,8 @@ class _PresyoScreenState extends State<PresyoScreen> {
                           visualDensity: VisualDensity.compact,
                           icon: const Icon(
                             Icons.edit_outlined,
-                            size: 18,
-                            color: AppColors.inkSecondary,
+                            size: 20,
+                            color: AppColors.primaryGreen,
                           ),
                           onPressed: () => _editItemDialog(item),
                         ),
@@ -659,7 +680,7 @@ class _PresyoScreenState extends State<PresyoScreen> {
                           visualDensity: VisualDensity.compact,
                           icon: const Icon(
                             Icons.close,
-                            size: 18,
+                            size: 20,
                             color: AppColors.danger,
                           ),
                           onPressed: () => _deleteItem(item),
@@ -692,19 +713,22 @@ class _UnitOptionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected ? AppColors.ink : AppColors.surface,
-      borderRadius: BorderRadius.circular(6),
+      color: selected ? AppColors.primaryGreen : AppColors.surface,
+      borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(8),
         child: Container(
-          height: 38,
+          height: 42,
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: selected ? AppColors.ink : AppColors.border,
+              color: selected
+                  ? AppColors.primaryGreenDark
+                  : AppColors.lightGreenBorder,
+              width: 1.5,
             ),
           ),
           child: Text(
@@ -712,9 +736,9 @@ class _UnitOptionButton extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: selected ? AppColors.surface : AppColors.ink,
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: selected ? AppColors.surface : AppColors.primaryGreenDark,
             ),
           ),
         ),

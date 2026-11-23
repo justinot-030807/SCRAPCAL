@@ -1,28 +1,49 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color scaffold = Color(0xFFFAFAFA);
+  // Soft light-green background that reduces glare outdoors while keeping high contrast
+  static const Color scaffold = Color(0xFFF2FBF5);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color keySecondary = Color(0xFFF4F4F5);
-  static const Color keyPressed = Color(0xFFE4E4E7);
-  static const Color ink = Color(0xFF111111);
-  static const Color inkSecondary = Color(0xFF52525B);
-  static const Color inkMuted = Color(0xFF71717A);
-  static const Color border = Color(0xFFE4E4E7);
-  static const Color borderStrong = Color(0xFFD4D4D8);
-  static const Color danger = Color(0xFFDC2626);
+
+  // Light green accents for active/quick-add surfaces
+  static const Color lightGreenBg = Color(0xFFDCFCE7);
+  static const Color lightGreenSurface = Color(0xFFE8F8EE);
+  static const Color lightGreenBorder = Color(0xFF86EFAC);
+
+  // Deep forest & emerald greens for high-contrast buttons and headers
+  static const Color primaryGreen = Color(0xFF15803D);
+  static const Color primaryGreenDark = Color(0xFF14532D);
+  static const Color mediumGreen = Color(0xFF16A34A);
+
+  // Tactile key surfaces
+  static const Color keySecondary = Color(0xFFDCFCE7);
+  static const Color keyPressed = Color(0xFFBBF7D0);
+
+  // High-contrast ink colors for older eyes
+  static const Color ink = Color(0xFF0F172A);
+  static const Color inkSecondary = Color(0xFF1E3A2F);
+  static const Color inkMuted = Color(0xFF475569);
+
+  // Clear borders so every button and box is easy to distinguish
+  static const Color border = Color(0xFFBBF7D0);
+  static const Color borderStrong = Color(0xFF4ADE80);
+  static const Color keyBorder = Color(0xFFCBD5E1);
+
+  // Clear red for Bura / Delete / Reset
+  static const Color danger = Color(0xFFB91C1C);
   static const Color dangerBg = Color(0xFFFEF2F2);
-  static const Color dangerBorder = Color(0xFFFECACA);
+  static const Color dangerBorder = Color(0xFFFCA5A5);
+
   static const Color accentGreen = Color(0xFF15803D);
-  static const Color accentGreenBg = Color(0xFFF0FDF4);
+  static const Color accentGreenBg = Color(0xFFDCFCE7);
 }
 
 class AppTheme {
   static const List<FontFeature> tabular = [FontFeature.tabularFigures()];
 
   static TextStyle tabularText({
-    double fontSize = 14,
-    FontWeight fontWeight = FontWeight.w500,
+    double fontSize = 16,
+    FontWeight fontWeight = FontWeight.w600,
     Color color = AppColors.ink,
     double? height,
     double? letterSpacing,
@@ -45,27 +66,27 @@ class AppTheme {
       colorScheme: const ColorScheme.light(
         surface: AppColors.surface,
         onSurface: AppColors.ink,
-        primary: AppColors.ink,
+        primary: AppColors.primaryGreen,
         onPrimary: AppColors.surface,
-        secondary: AppColors.inkSecondary,
+        secondary: AppColors.primaryGreenDark,
         error: AppColors.danger,
       ),
       dividerColor: AppColors.border,
-      splashFactory: NoSplash.splashFactory,
+      splashFactory: InkRipple.splashFactory,
       highlightColor: AppColors.keyPressed,
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.scaffold,
-        foregroundColor: AppColors.ink,
+        backgroundColor: AppColors.primaryGreen,
+        foregroundColor: AppColors.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
       ),
       snackBarTheme: const SnackBarThemeData(
-        backgroundColor: AppColors.ink,
+        backgroundColor: AppColors.primaryGreenDark,
         contentTextStyle: TextStyle(
           color: AppColors.surface,
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
           fontFeatures: tabular,
         ),
         behavior: SnackBarBehavior.floating,
