@@ -16,6 +16,14 @@ class CalculatorScreen extends StatefulWidget {
 }
 
 class _CalculatorScreenState extends State<CalculatorScreen> {
+  static const SystemUiOverlayStyle _overlayStyle = SystemUiOverlayStyle(
+    statusBarColor: AppColors.primaryGreen,
+    statusBarIconBrightness: Brightness.light,
+    statusBarBrightness: Brightness.dark,
+    systemNavigationBarColor: AppColors.scaffold,
+    systemNavigationBarIconBrightness: Brightness.dark,
+  );
+
   late List<ScrapItem> _items;
   late ScrapItem _selectedItem;
   late List<TicketLine> _ticketLines;
@@ -140,13 +148,75 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     });
   }
 
-  void _onResetTicket() {
+  void _executeResetTicket() {
     HapticFeedback.lightImpact();
     setState(() {
       _input = '0';
       _ticketLines = [];
     });
     widget.storage.saveActiveTicket(_ticketLines);
+  }
+
+  Future<void> _confirmResetTicket() async {
+    if (_ticketLines.isEmpty && _input == '0') return;
+    HapticFeedback.lightImpact();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: AppColors.lightGreenBorder, width: 1.5),
+        ),
+        title: const Text(
+          'Burahin lahat ng nakalista?',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+            color: AppColors.ink,
+          ),
+        ),
+        content: const Text(
+          'Mabubura ang kasalukuyang listahan at tinitimbang para makapagsimula ng bagong customer.',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: AppColors.inkSecondary,
+          ),
+        ),
+        actions: [
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.ink,
+              side: const BorderSide(color: AppColors.keyBorder),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            ),
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text(
+              'Hindi',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+            ),
+          ),
+          FilledButton(
+            key: const Key('confirm_reset_yes_btn'),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.danger,
+              foregroundColor: AppColors.surface,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text(
+              'Oo, Burahin',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      _executeResetTicket();
+    }
   }
 
   void _onQuickAdd(double increment) {
@@ -312,20 +382,87 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     );
   }
 
+  Widget _buildTwoRowCategorySelector() {
+    final allChips = <Widget>[
+      ..._items.map((item) {
+        final isSelected = item.id == _selectedItem.id;
+        return _ScrapSelectorChip(
+          key: Key('chip_${item.id}'),
+          label: item.chipLabel,
+          selected: isSelected,
+          onTap: () => _selectScrapItem(item),
+        );
+      }),
+      _ScrapSelectorChip(
+        key: const Key('chip_add_custom'),
+        label: '+ Add',
+        selected: false,
+        isAction: true,
+        onTap: () => _openPresyo(openAddOnLaunch: true),
+      ),
+    ];
+
+    final row1 = <Widget>[];
+    final row2 = <Widget>[];
+    for (int i = 0; i < allChips.length; i++) {
+      if (i.isEven) {
+        row1.add(allChips[i]);
+      } else {
+        row2.add(allChips[i]);
+      }
+    }
+
+    return SizedBox(
+      height: 76,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            SizedBox(
+              height: 35,
+              child: Row(
+                children: [
+                  for (int i = 0; i < row1.length; i++) ...[
+                    if (i > 0) const SizedBox(width: 8),
+                    row1[i],
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 6),
+            SizedBox(
+              height: 35,
+              child: Row(
+                children: [
+                  for (int i = 0; i < row2.length; i++) ...[
+                    if (i > 0) const SizedBox(width: 8),
+                    row2[i],
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isPiece = _selectedItem.unit == ScrapUnit.perPiece;
 
-    return Scaffold(
-      backgroundColor: AppColors.scaffold,
-      body: SafeArea(
-        child: Column(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: _overlayStyle,
+      child: Scaffold(
+        backgroundColor: AppColors.scaffold,
+        body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. Senior-Friendly Green Header Bar
+            // 1. Senior-Friendly Green Header Bar (extends behind top status bar so status icons are always crisp light-on-dark-green)
             Container(
-              height: 54,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: const BoxDecoration(
                 color: AppColors.primaryGreen,
                 border: Border(
@@ -335,607 +472,651 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                   ),
                 ),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(5),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Icon(
-                      Icons.calculate_outlined,
-                      color: AppColors.surface,
-                      size: 20,
-                    ),
+              child: SafeArea(
+                bottom: false,
+                child: Container(
+                  height: 52,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Icon(
+                          Icons.calculate_outlined,
+                          color: AppColors.surface,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'SCRAPCAL',
+                        style: TextStyle(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.6,
+                          color: AppColors.surface,
+                        ),
+                      ),
+                      const Spacer(),
+                      _HeaderNavButton(
+                        key: const Key('nav_presyo_btn'),
+                        icon: Icons.sell_outlined,
+                        label: 'Presyo',
+                        onTap: () => _openPresyo(),
+                      ),
+                      const SizedBox(width: 8),
+                      _HeaderNavButton(
+                        key: const Key('nav_history_btn'),
+                        icon: Icons.receipt_long_outlined,
+                        label: 'History',
+                        badgeCount: _history.length,
+                        onTap: _openHistory,
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'SCRAPCAL',
-                    style: TextStyle(
-                      fontSize: 19,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.6,
-                      color: AppColors.surface,
-                    ),
-                  ),
-                  const Spacer(),
-                  _HeaderNavButton(
-                    key: const Key('nav_presyo_btn'),
-                    icon: Icons.sell_outlined,
-                    label: 'Presyo',
-                    onTap: () => _openPresyo(),
-                  ),
-                  const SizedBox(width: 8),
-                  _HeaderNavButton(
-                    key: const Key('nav_history_btn'),
-                    icon: Icons.receipt_long_outlined,
-                    label: 'History',
-                    badgeCount: _history.length,
-                    onTap: _openHistory,
-                  ),
-                ],
+                ),
               ),
             ),
 
-            // 2. Calculator Tape & Live Display Panel
+            // Remaining body inside SafeArea(top: false)
             Expanded(
-              flex: 4,
-              child: Container(
-                margin: const EdgeInsets.fromLTRB(10, 8, 10, 6),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: AppColors.lightGreenBorder,
-                    width: 1.5,
-                  ),
-                ),
+              child: SafeArea(
+                top: false,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Tape Header Bar with Reset Ticket action
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: const BoxDecoration(
-                        color: AppColors.lightGreenSurface,
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(8),
-                        ),
-                        border: Border(
-                          bottom: BorderSide(color: AppColors.border),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.playlist_add_check_rounded,
-                            size: 18,
-                            color: AppColors.primaryGreenDark,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'LISTAHAN (${_ticketLines.length} ${_ticketLines.length == 1 ? 'ITEM' : 'ITEMS'})',
-                            style: AppTheme.tabularText(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.primaryGreenDark,
-                              letterSpacing: 0.4,
-                            ),
-                          ),
-                          const Spacer(),
-                          if (_ticketLines.isNotEmpty || _input != '0')
-                            InkWell(
-                              key: const Key('reset_ticket_btn'),
-                              borderRadius: BorderRadius.circular(6),
-                              onTap: _onResetTicket,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.dangerBg,
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(
-                                    color: AppColors.dangerBorder,
-                                  ),
-                                ),
-                                child: const Text(
-                                  'Reset',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.danger,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-
-                    // Running Ticket Tape (Expanded scrollable area)
+                    // 2. Calculator Tape & Live Display Panel
                     Expanded(
-                      child: _ticketLines.isEmpty
-                          ? Center(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                ),
-                                child: Text(
-                                  '1. Pumili ng kalakal sa ibaba (Bakal, Plastic, Bote...)\n2. Pindutin ang timbang o bilang, tapos + DAGDAG o SAVE.',
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    height: 1.35,
-                                    color: AppColors.inkMuted,
-                                  ),
-                                ),
-                              ),
-                            )
-                          : ListView.separated(
-                              controller: _tapeScrollController,
+                      flex: 4,
+                      child: Container(
+                        margin: const EdgeInsets.fromLTRB(12, 6, 12, 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: AppColors.lightGreenBorder,
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Tape Header Bar with Bagong Lista confirmation action
+                            Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 10,
-                                vertical: 4,
+                                vertical: 5,
                               ),
-                              itemCount: _ticketLines.length,
-                              separatorBuilder: (_, _) => const Divider(
-                                height: 1,
-                                thickness: 1,
-                                color: AppColors.border,
+                              decoration: const BoxDecoration(
+                                color: AppColors.lightGreenSurface,
+                                borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(8),
+                                ),
+                                border: Border(
+                                  bottom: BorderSide(color: AppColors.border),
+                                ),
                               ),
-                              itemBuilder: (context, index) {
-                                final line = _ticketLines[index];
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 5,
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.playlist_add_check_rounded,
+                                    size: 18,
+                                    color: AppColors.primaryGreenDark,
                                   ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 22,
-                                        height: 22,
-                                        alignment: Alignment.center,
-                                        decoration: BoxDecoration(
-                                          color: AppColors.lightGreenBg,
-                                          borderRadius: BorderRadius.circular(
-                                            11,
-                                          ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'LISTAHAN (${_ticketLines.length} ${_ticketLines.length == 1 ? 'ITEM' : 'ITEMS'})',
+                                    style: AppTheme.tabularText(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.primaryGreenDark,
+                                      letterSpacing: 0.4,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  InkWell(
+                                    key: const Key('reset_ticket_btn'),
+                                    borderRadius: BorderRadius.circular(6),
+                                    onTap:
+                                        (_ticketLines.isNotEmpty ||
+                                            _input != '0')
+                                        ? _confirmResetTicket
+                                        : null,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 3,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            (_ticketLines.isNotEmpty ||
+                                                _input != '0')
+                                            ? AppColors.dangerBg
+                                            : AppColors.surface,
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(
+                                          color:
+                                              (_ticketLines.isNotEmpty ||
+                                                  _input != '0')
+                                              ? AppColors.dangerBorder
+                                              : AppColors.border,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'Bagong Lista',
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.w800,
+                                          color:
+                                              (_ticketLines.isNotEmpty ||
+                                                  _input != '0')
+                                              ? AppColors.danger
+                                              : AppColors.inkMuted,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Running Ticket Tape (Expanded scrollable area)
+                            Expanded(
+                              child: _ticketLines.isEmpty
+                                  ? Center(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
                                         ),
                                         child: Text(
-                                          '${index + 1}',
-                                          style: AppTheme.tabularText(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w800,
-                                            color: AppColors.primaryGreenDark,
+                                          '1. Pumili ng kalakal sa ibaba (Bakal, Plastic, Bote...)\n2. Pindutin ang timbang o bilang, tapos + DAGDAG o SAVE.',
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            fontSize: 12.5,
+                                            fontWeight: FontWeight.w600,
+                                            height: 1.3,
+                                            color: AppColors.inkMuted,
                                           ),
                                         ),
                                       ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
+                                    )
+                                  : ListView.separated(
+                                      controller: _tapeScrollController,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      itemCount: _ticketLines.length,
+                                      separatorBuilder: (_, _) => const Divider(
+                                        height: 1,
+                                        thickness: 1,
+                                        color: AppColors.border,
+                                      ),
+                                      itemBuilder: (context, index) {
+                                        final line = _ticketLines[index];
+                                        return Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 4,
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Container(
+                                                width: 22,
+                                                height: 22,
+                                                alignment: Alignment.center,
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.lightGreenBg,
+                                                  borderRadius:
+                                                      BorderRadius.circular(11),
+                                                ),
+                                                child: Text(
+                                                  '${index + 1}',
+                                                  style: AppTheme.tabularText(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: AppColors
+                                                        .primaryGreenDark,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Text(
+                                                  line.formattedTapeSummary,
+                                                  style: AppTheme.tabularText(
+                                                    fontSize: 13.5,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: AppColors.ink,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              InkWell(
+                                                key: Key(
+                                                  'remove_line_${line.id}',
+                                                ),
+                                                onTap: () =>
+                                                    _removeTicketLine(line.id),
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                                child: Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 2,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color: AppColors.dangerBg,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          6,
+                                                        ),
+                                                    border: Border.all(
+                                                      color: AppColors
+                                                          .dangerBorder,
+                                                    ),
+                                                  ),
+                                                  child: const Text(
+                                                    '×',
+                                                    style: TextStyle(
+                                                      fontSize: 15,
+                                                      fontWeight:
+                                                          FontWeight.w900,
+                                                      color: AppColors.danger,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    ),
+                            ),
+
+                            // Active Calculation Bar (Draft Preview with "Tinitimbang ngayon:" & White Input Pill)
+                            Container(
+                              padding: const EdgeInsets.fromLTRB(10, 5, 10, 6),
+                              decoration: const BoxDecoration(
+                                color: AppColors.lightGreenBg,
+                                border: Border(
+                                  top: BorderSide(
+                                    color: AppColors.lightGreenBorder,
+                                    width: 1.2,
+                                  ),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text(
+                                    'Tinitimbang ngayon:',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.primaryGreenDark,
+                                      letterSpacing: 0.2,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primaryGreen,
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                        ),
                                         child: Text(
-                                          line.formattedTapeSummary,
+                                          _selectedItem.name,
+                                          key: const Key('active_scrap_name'),
+                                          style: const TextStyle(
+                                            fontSize: 12.5,
+                                            fontWeight: FontWeight.w800,
+                                            color: AppColors.surface,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      // Prominent white rounded container/pill for typed quantity
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 3,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.surface,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          border: Border.all(
+                                            color: AppColors.primaryGreen,
+                                            width: 1.5,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          _formattedActiveQuantity,
+                                          key: const Key(
+                                            'active_quantity_pill',
+                                          ),
                                           style: AppTheme.tabularText(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w700,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w900,
                                             color: AppColors.ink,
                                           ),
                                         ),
                                       ),
                                       const SizedBox(width: 6),
-                                      InkWell(
-                                        key: Key('remove_line_${line.id}'),
-                                        onTap: () => _removeTicketLine(line.id),
-                                        borderRadius: BorderRadius.circular(6),
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 3,
+                                      Expanded(
+                                        child: Text(
+                                          '× ${ScrapMath.formatPeso(_selectedItem.price)}/${_selectedItem.unit.shortLabel}',
+                                          key: const Key(
+                                            'active_calculation_text',
                                           ),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.dangerBg,
-                                            borderRadius: BorderRadius.circular(
-                                              6,
-                                            ),
-                                            border: Border.all(
-                                              color: AppColors.dangerBorder,
-                                            ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: AppTheme.tabularText(
+                                            fontSize: 13.5,
+                                            fontWeight: FontWeight.w800,
+                                            color: AppColors.primaryGreenDark,
                                           ),
-                                          child: const Text(
-                                            '×',
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w900,
-                                              color: AppColors.danger,
-                                            ),
-                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        ScrapMath.formatPeso(_activeSubtotal),
+                                        key: const Key('active_subtotal_text'),
+                                        style: AppTheme.tabularText(
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.w900,
+                                          color: AppColors.primaryGreenDark,
                                         ),
                                       ),
                                     ],
                                   ),
-                                );
-                              },
-                            ),
-                    ),
-
-                    // Active Calculation Bar (Light Green Highlighted Box)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 8,
-                      ),
-                      decoration: const BoxDecoration(
-                        color: AppColors.lightGreenBg,
-                        border: Border(
-                          top: BorderSide(
-                            color: AppColors.lightGreenBorder,
-                            width: 1.2,
-                          ),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 9,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primaryGreen,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              _selectedItem.name,
-                              key: const Key('active_scrap_name'),
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.surface,
+                                ],
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              '$_formattedActiveQuantity × ${ScrapMath.formatPeso(_selectedItem.price)}/${_selectedItem.unit.shortLabel}',
-                              key: const Key('active_calculation_text'),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTheme.tabularText(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w800,
+
+                            // Grand Total Row (High-Contrast Deep Forest Green Banner)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 7,
+                              ),
+                              decoration: const BoxDecoration(
                                 color: AppColors.primaryGreenDark,
+                                borderRadius: BorderRadius.vertical(
+                                  bottom: Radius.circular(8),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'KABUUAN / TOTAL',
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 0.5,
+                                      color: AppColors.lightGreenBg,
+                                    ),
+                                  ),
+                                  Text(
+                                    ScrapMath.formatPeso(_grandTotal),
+                                    key: const Key('grand_total_text'),
+                                    style: AppTheme.tabularText(
+                                      fontSize: 25,
+                                      fontWeight: FontWeight.w900,
+                                      color: AppColors.surface,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            ScrapMath.formatPeso(_activeSubtotal),
-                            key: const Key('active_subtotal_text'),
-                            style: AppTheme.tabularText(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              color: AppColors.primaryGreenDark,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Grand Total Row (High-Contrast Deep Forest Green Banner)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: const BoxDecoration(
-                        color: AppColors.primaryGreenDark,
-                        borderRadius: BorderRadius.vertical(
-                          bottom: Radius.circular(8),
+                          ],
                         ),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'KABUUAN / TOTAL',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.5,
-                              color: AppColors.lightGreenBg,
-                            ),
-                          ),
-                          Text(
-                            ScrapMath.formatPeso(_grandTotal),
-                            key: const Key('grand_total_text'),
-                            style: AppTheme.tabularText(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w900,
-                              color: AppColors.surface,
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
-                  ],
-                ),
-              ),
-            ),
 
-            // 3. Scrap Selector Strip (SingleChildScrollView horizontal)
-            SizedBox(
-              height: 44,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Row(
-                  children: [
-                    ..._items.map((item) {
-                      final isSelected = item.id == _selectedItem.id;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: _ScrapSelectorChip(
-                          key: Key('chip_${item.id}'),
-                          label: item.chipLabel,
-                          selected: isSelected,
-                          onTap: () => _selectScrapItem(item),
+                    // 3. Scrap Category Selector (2-row horizontally scrollable grid with 12px horizontal padding)
+                    _buildTwoRowCategorySelector(),
+
+                    const SizedBox(height: 6),
+
+                    // 4. Context-Aware Quick-Add Row (3 wider buttons: +1/4, +1/2, +3/4 for /kg; +1, +5, +10 for /pc)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: SizedBox(
+                        height: 40,
+                        child: Row(
+                          children: isPiece
+                              ? [
+                                  _QuickAddKey(
+                                    key: const Key('quick_add_pc_1'),
+                                    label: '+1',
+                                    onTap: () => _onQuickAdd(1),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _QuickAddKey(
+                                    key: const Key('quick_add_pc_5'),
+                                    label: '+5',
+                                    onTap: () => _onQuickAdd(5),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _QuickAddKey(
+                                    key: const Key('quick_add_pc_10'),
+                                    label: '+10',
+                                    onTap: () => _onQuickAdd(10),
+                                  ),
+                                ]
+                              : [
+                                  _QuickAddKey(
+                                    key: const Key('quick_add_kg_025'),
+                                    label: '+1/4',
+                                    subLabel: '+0.25',
+                                    onTap: () => _onQuickAdd(0.25),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _QuickAddKey(
+                                    key: const Key('quick_add_kg_050'),
+                                    label: '+1/2',
+                                    subLabel: '+0.50',
+                                    onTap: () => _onQuickAdd(0.50),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _QuickAddKey(
+                                    key: const Key('quick_add_kg_075'),
+                                    label: '+3/4',
+                                    subLabel: '+0.75',
+                                    onTap: () => _onQuickAdd(0.75),
+                                  ),
+                                ],
                         ),
-                      );
-                    }),
-                    _ScrapSelectorChip(
-                      key: const Key('chip_add_custom'),
-                      label: '+ Add',
-                      selected: false,
-                      isAction: true,
-                      onTap: () => _openPresyo(openAddOnLaunch: true),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 6),
-
-            // 4. Context-Aware Quick-Add Row
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: SizedBox(
-                height: 42,
-                child: Row(
-                  children: isPiece
-                      ? [
-                          _QuickAddKey(
-                            key: const Key('quick_add_pc_1'),
-                            label: '+1',
-                            subLabel: 'pc',
-                            onTap: () => _onQuickAdd(1),
-                          ),
-                          const SizedBox(width: 6),
-                          _QuickAddKey(
-                            key: const Key('quick_add_pc_5'),
-                            label: '+5',
-                            subLabel: 'pcs',
-                            onTap: () => _onQuickAdd(5),
-                          ),
-                          const SizedBox(width: 6),
-                          _QuickAddKey(
-                            key: const Key('quick_add_pc_10'),
-                            label: '+10',
-                            subLabel: 'pcs',
-                            onTap: () => _onQuickAdd(10),
-                          ),
-                          const SizedBox(width: 6),
-                          _QuickAddKey(
-                            key: const Key('quick_add_pc_20'),
-                            label: '+20',
-                            subLabel: 'pcs',
-                            onTap: () => _onQuickAdd(20),
-                          ),
-                        ]
-                      : [
-                          _QuickAddKey(
-                            key: const Key('quick_add_kg_025'),
-                            label: '+1/4',
-                            subLabel: '+0.25',
-                            onTap: () => _onQuickAdd(0.25),
-                          ),
-                          const SizedBox(width: 6),
-                          _QuickAddKey(
-                            key: const Key('quick_add_kg_050'),
-                            label: '+1/2',
-                            subLabel: '+0.50',
-                            onTap: () => _onQuickAdd(0.50),
-                          ),
-                          const SizedBox(width: 6),
-                          _QuickAddKey(
-                            key: const Key('quick_add_kg_075'),
-                            label: '+3/4',
-                            subLabel: '+0.75',
-                            onTap: () => _onQuickAdd(0.75),
-                          ),
-                          const SizedBox(width: 6),
-                          _QuickAddKey(
-                            key: const Key('quick_add_kg_100'),
-                            label: '+1',
-                            subLabel: '+1.00',
-                            onTap: () => _onQuickAdd(1.00),
-                          ),
-                        ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 6),
-
-            // 5. Tactile Calculator Numpad (4-column grid, non-scrolling)
-            Expanded(
-              flex: 5,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Columns 1-3: Digits 7-9, 4-6, 1-3, . 0 ⌫
-                    Expanded(
-                      flex: 3,
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: Row(
-                              children: [
-                                _KeypadButton(
-                                  key: const Key('key_7'),
-                                  label: '7',
-                                  onTap: () => _onDigitTap('7'),
-                                ),
-                                const SizedBox(width: 6),
-                                _KeypadButton(
-                                  key: const Key('key_8'),
-                                  label: '8',
-                                  onTap: () => _onDigitTap('8'),
-                                ),
-                                const SizedBox(width: 6),
-                                _KeypadButton(
-                                  key: const Key('key_9'),
-                                  label: '9',
-                                  onTap: () => _onDigitTap('9'),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Expanded(
-                            child: Row(
-                              children: [
-                                _KeypadButton(
-                                  key: const Key('key_4'),
-                                  label: '4',
-                                  onTap: () => _onDigitTap('4'),
-                                ),
-                                const SizedBox(width: 6),
-                                _KeypadButton(
-                                  key: const Key('key_5'),
-                                  label: '5',
-                                  onTap: () => _onDigitTap('5'),
-                                ),
-                                const SizedBox(width: 6),
-                                _KeypadButton(
-                                  key: const Key('key_6'),
-                                  label: '6',
-                                  onTap: () => _onDigitTap('6'),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Expanded(
-                            child: Row(
-                              children: [
-                                _KeypadButton(
-                                  key: const Key('key_1'),
-                                  label: '1',
-                                  onTap: () => _onDigitTap('1'),
-                                ),
-                                const SizedBox(width: 6),
-                                _KeypadButton(
-                                  key: const Key('key_2'),
-                                  label: '2',
-                                  onTap: () => _onDigitTap('2'),
-                                ),
-                                const SizedBox(width: 6),
-                                _KeypadButton(
-                                  key: const Key('key_3'),
-                                  label: '3',
-                                  onTap: () => _onDigitTap('3'),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Expanded(
-                            child: Row(
-                              children: [
-                                _KeypadButton(
-                                  key: const Key('key_dot'),
-                                  label: '.',
-                                  enabled: !isPiece,
-                                  onTap: () => _onDigitTap('.'),
-                                ),
-                                const SizedBox(width: 6),
-                                _KeypadButton(
-                                  key: const Key('key_0'),
-                                  label: '0',
-                                  onTap: () => _onDigitTap('0'),
-                                ),
-                                const SizedBox(width: 6),
-                                _KeypadButton(
-                                  key: const Key('key_backspace'),
-                                  label: '⌫',
-                                  backgroundColor: AppColors.lightGreenSurface,
-                                  borderColor: AppColors.lightGreenBorder,
-                                  textColor: AppColors.primaryGreenDark,
-                                  onTap: _onBackspace,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    // Column 4: Action Controls (C / BURA, + DAGDAG, SAVE)
+
+                    const SizedBox(height: 6),
+
+                    // 5. Tactile Calculator Numpad (4-column grid, non-scrolling)
                     Expanded(
-                      flex: 1,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(
-                            flex: 1,
-                            child: _ActionKeyButton(
-                              key: const Key('key_clear'),
-                              label: 'C',
-                              subLabel: 'BURA',
-                              backgroundColor: AppColors.dangerBg,
-                              borderColor: AppColors.dangerBorder,
-                              textColor: AppColors.danger,
-                              onTap: _onClearInput,
-                              onLongPress: _onResetTicket,
+                      flex: 5,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Columns 1-3: Digits 7-9, 4-6, 1-3, . 0 ⌫
+                            Expanded(
+                              flex: 3,
+                              child: Column(
+                                children: [
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        _KeypadButton(
+                                          key: const Key('key_7'),
+                                          label: '7',
+                                          onTap: () => _onDigitTap('7'),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        _KeypadButton(
+                                          key: const Key('key_8'),
+                                          label: '8',
+                                          onTap: () => _onDigitTap('8'),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        _KeypadButton(
+                                          key: const Key('key_9'),
+                                          label: '9',
+                                          onTap: () => _onDigitTap('9'),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        _KeypadButton(
+                                          key: const Key('key_4'),
+                                          label: '4',
+                                          onTap: () => _onDigitTap('4'),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        _KeypadButton(
+                                          key: const Key('key_5'),
+                                          label: '5',
+                                          onTap: () => _onDigitTap('5'),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        _KeypadButton(
+                                          key: const Key('key_6'),
+                                          label: '6',
+                                          onTap: () => _onDigitTap('6'),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        _KeypadButton(
+                                          key: const Key('key_1'),
+                                          label: '1',
+                                          onTap: () => _onDigitTap('1'),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        _KeypadButton(
+                                          key: const Key('key_2'),
+                                          label: '2',
+                                          onTap: () => _onDigitTap('2'),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        _KeypadButton(
+                                          key: const Key('key_3'),
+                                          label: '3',
+                                          onTap: () => _onDigitTap('3'),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        _KeypadButton(
+                                          key: const Key('key_dot'),
+                                          label: '.',
+                                          fontSize: 34,
+                                          enabled: !isPiece,
+                                          onTap: () => _onDigitTap('.'),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        _KeypadButton(
+                                          key: const Key('key_0'),
+                                          label: '0',
+                                          onTap: () => _onDigitTap('0'),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        _KeypadButton(
+                                          key: const Key('key_backspace'),
+                                          label: '⌫',
+                                          backgroundColor:
+                                              AppColors.lightGreenSurface,
+                                          borderColor:
+                                              AppColors.lightGreenBorder,
+                                          textColor: AppColors.primaryGreenDark,
+                                          onTap: _onBackspace,
+                                          onLongPress: _onClearInput,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 6),
-                          Expanded(
-                            flex: 2,
-                            child: _ActionKeyButton(
-                              key: const Key('key_dagdag'),
-                              label: '+ DAGDAG',
-                              subLabel: 'SA LISTA',
-                              backgroundColor: AppColors.lightGreenBg,
-                              borderColor: AppColors.mediumGreen,
-                              textColor: AppColors.primaryGreenDark,
-                              onTap: _onAddLineToTape,
+                            const SizedBox(width: 6),
+                            // Column 4: Action Controls (ULITIN, + DAGDAG SA LISTA, SAVE / TAPOS NA)
+                            Expanded(
+                              flex: 1,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Expanded(
+                                    flex: 1,
+                                    child: _ActionKeyButton(
+                                      key: const Key('key_clear'),
+                                      label: 'ULITIN',
+                                      backgroundColor: AppColors.dangerBg,
+                                      borderColor: AppColors.dangerBorder,
+                                      textColor: AppColors.danger,
+                                      onTap: _onClearInput,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Expanded(
+                                    flex: 2,
+                                    child: _ActionKeyButton(
+                                      key: const Key('key_dagdag'),
+                                      label: '+ DAGDAG',
+                                      subLabel: 'SA LISTA',
+                                      backgroundColor: AppColors.primaryGreen,
+                                      borderColor: AppColors.primaryGreenDark,
+                                      textColor: AppColors.surface,
+                                      onTap: _onAddLineToTape,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Expanded(
+                                    flex: 1,
+                                    child: _ActionKeyButton(
+                                      key: const Key('key_save'),
+                                      label: 'SAVE',
+                                      subLabel: 'TAPOS NA',
+                                      backgroundColor: AppColors.saveAmber,
+                                      borderColor: AppColors.saveAmberDark,
+                                      textColor: AppColors.surface,
+                                      onTap: _onSaveTransaction,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 6),
-                          Expanded(
-                            flex: 1,
-                            child: _ActionKeyButton(
-                              key: const Key('key_save'),
-                              label: 'SAVE',
-                              subLabel: 'TAPOS NA',
-                              backgroundColor: AppColors.primaryGreen,
-                              borderColor: AppColors.primaryGreenDark,
-                              textColor: AppColors.surface,
-                              onTap: _onSaveTransaction,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -972,7 +1153,7 @@ class _HeaderNavButton extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
         child: Container(
-          height: 38,
+          height: 36,
           padding: const EdgeInsets.symmetric(horizontal: 10),
           alignment: Alignment.center,
           decoration: BoxDecoration(
@@ -987,7 +1168,7 @@ class _HeaderNavButton extends StatelessWidget {
               Text(
                 label,
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 13.5,
                   fontWeight: FontWeight.w800,
                   color: AppColors.primaryGreenDark,
                 ),
@@ -1045,15 +1226,15 @@ class _ScrapSelectorChip extends StatelessWidget {
 
     return Material(
       color: bgColor,
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(18),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(18),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(
               color: selected
                   ? AppColors.primaryGreenDark
@@ -1067,7 +1248,7 @@ class _ScrapSelectorChip extends StatelessWidget {
               if (selected) ...[
                 const Icon(
                   Icons.check_circle,
-                  size: 16,
+                  size: 15,
                   color: AppColors.surface,
                 ),
                 const SizedBox(width: 5),
@@ -1075,7 +1256,7 @@ class _ScrapSelectorChip extends StatelessWidget {
               Text(
                 label,
                 style: AppTheme.tabularText(
-                  fontSize: 14,
+                  fontSize: 13.5,
                   fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
                   color: fgColor,
                 ),
@@ -1130,11 +1311,11 @@ class _QuickAddKey extends StatelessWidget {
                   ),
                 ),
                 if (subLabel != null) ...[
-                  const SizedBox(width: 3),
+                  const SizedBox(width: 4),
                   Text(
                     '($subLabel)',
                     style: AppTheme.tabularText(
-                      fontSize: 11,
+                      fontSize: 11.5,
                       fontWeight: FontWeight.w700,
                       color: AppColors.primaryGreen,
                     ),
@@ -1152,19 +1333,23 @@ class _QuickAddKey extends StatelessWidget {
 class _KeypadButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
   final bool enabled;
   final Color backgroundColor;
   final Color borderColor;
   final Color textColor;
+  final double fontSize;
 
   const _KeypadButton({
     super.key,
     required this.label,
     required this.onTap,
+    this.onLongPress,
     this.enabled = true,
     this.backgroundColor = AppColors.surface,
     this.borderColor = AppColors.keyBorder,
     this.textColor = AppColors.ink,
+    this.fontSize = 26,
   });
 
   @override
@@ -1175,6 +1360,7 @@ class _KeypadButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         child: InkWell(
           onTap: enabled ? onTap : null,
+          onLongPress: enabled ? onLongPress : null,
           borderRadius: BorderRadius.circular(10),
           child: Container(
             alignment: Alignment.center,
@@ -1188,8 +1374,8 @@ class _KeypadButton extends StatelessWidget {
             child: Text(
               label,
               style: AppTheme.tabularText(
-                fontSize: 26,
-                fontWeight: FontWeight.w800,
+                fontSize: fontSize,
+                fontWeight: FontWeight.w900,
                 color: enabled ? textColor : AppColors.keyBorder,
               ),
             ),
@@ -1207,7 +1393,6 @@ class _ActionKeyButton extends StatelessWidget {
   final Color borderColor;
   final Color textColor;
   final VoidCallback onTap;
-  final VoidCallback? onLongPress;
 
   const _ActionKeyButton({
     super.key,
@@ -1217,7 +1402,6 @@ class _ActionKeyButton extends StatelessWidget {
     required this.borderColor,
     required this.textColor,
     required this.onTap,
-    this.onLongPress,
   });
 
   @override
@@ -1227,7 +1411,6 @@ class _ActionKeyButton extends StatelessWidget {
       borderRadius: BorderRadius.circular(10),
       child: InkWell(
         onTap: onTap,
-        onLongPress: onLongPress,
         borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -1244,7 +1427,7 @@ class _ActionKeyButton extends StatelessWidget {
                 child: Text(
                   label,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0.3,
                     color: textColor,
@@ -1260,7 +1443,7 @@ class _ActionKeyButton extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w800,
-                      color: textColor.withValues(alpha: 0.85),
+                      color: textColor.withValues(alpha: 0.9),
                     ),
                   ),
                 ),

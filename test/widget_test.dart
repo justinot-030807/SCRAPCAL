@@ -44,8 +44,10 @@ void main() {
       final restored = ScrapTransaction.fromJson(tx.toJson());
       expect(restored.id, equals('t1'));
       expect(restored.grandTotal, equals(18.75));
-      expect(restored.lines.first.formattedTapeSummary,
-          equals('Bakal · 1.25 kg (1¼) × ₱15.00 = ₱18.75'));
+      expect(
+        restored.lines.first.formattedTapeSummary,
+        equals('Bakal · 1.25 kg (1¼) × ₱15.00 = ₱18.75'),
+      );
       expect(restored.formattedTimestamp, equals('Nov 23 · 11:20 AM'));
     });
   });
@@ -59,32 +61,46 @@ void main() {
     });
 
     testWidgets(
-      'computes kg fractions, switches to per-piraso increments, saves ticket to History',
+      'computes kg fractions, switches to per-piraso increments, confirms Bagong Lista, and saves ticket to History',
       (WidgetTester tester) async {
         await tester.pumpWidget(ScrapCalApp(storage: storage));
 
-        // Verify instant launch into calculator with seeded default chips
+        // Verify instant launch into calculator with 2-row seeded default chips & draft label
         expect(find.text('SCRAPCAL'), findsOneWidget);
+        expect(find.text('Tinitimbang ngayon:'), findsOneWidget);
         expect(find.text('Bakal ₱15/kg'), findsOneWidget);
         expect(find.text('Plastic ₱10/kg'), findsOneWidget);
         expect(find.text('Tanso ₱350/kg'), findsOneWidget);
         expect(find.text('Bote ₱1/pc'), findsOneWidget);
+        expect(find.text('ULITIN'), findsOneWidget);
+        expect(find.text('Bagong Lista'), findsOneWidget);
 
-        // Verify kg quick-add keys are visible for Bakal
+        // Verify 3 kg quick-add fraction keys are visible for Bakal (no redundant +1.00 key)
         expect(find.byKey(const Key('quick_add_kg_025')), findsOneWidget);
-        expect(find.byKey(const Key('quick_add_kg_100')), findsOneWidget);
+        expect(find.byKey(const Key('quick_add_kg_050')), findsOneWidget);
+        expect(find.byKey(const Key('quick_add_kg_075')), findsOneWidget);
+        expect(find.byKey(const Key('quick_add_kg_100')), findsNothing);
 
-        // Tap +1 and +1/4 -> 1.25 kg (1¼) of Bakal @ ₱15.00 = ₱18.75
-        await tester.tap(find.byKey(const Key('quick_add_kg_100')));
+        // Tap digit 1 on numpad and +1/4 quick-add -> 1.25 kg (1¼) of Bakal @ ₱15.00 = ₱18.75
+        await tester.tap(find.byKey(const Key('key_1')));
         await tester.pump();
         await tester.tap(find.byKey(const Key('quick_add_kg_025')));
         await tester.pump();
 
-        expect(
-          find.text('1.25 kg (1¼) × ₱15.00/kg'),
-          findsOneWidget,
-        );
+        expect(find.text('1.25 kg (1¼)'), findsOneWidget);
+        expect(find.text('× ₱15.00/kg'), findsOneWidget);
         expect(find.text('₱18.75'), findsNWidgets(2)); // subtotal & grand total
+
+        // Test ULITIN and long-press backspace clearing input
+        await tester.tap(find.byKey(const Key('key_clear')));
+        await tester.pump();
+        expect(find.text('0 kg'), findsOneWidget);
+
+        // Re-enter 1.25 kg and add to list
+        await tester.tap(find.byKey(const Key('key_1')));
+        await tester.pump();
+        await tester.tap(find.byKey(const Key('quick_add_kg_025')));
+        await tester.pump();
 
         // Tap + DAGDAG to append Bakal to the running ticket tape
         await tester.tap(find.byKey(const Key('key_dagdag')));
@@ -95,13 +111,26 @@ void main() {
           findsOneWidget,
         );
 
+        // Verify Bagong Lista confirmation dialog protects against accidental clears
+        await tester.tap(find.byKey(const Key('reset_ticket_btn')));
+        await tester.pumpAndSettle();
+        expect(find.text('Burahin lahat ng nakalista?'), findsOneWidget);
+        await tester.tap(find.text('Hindi'));
+        await tester.pumpAndSettle();
+        expect(
+          find.text('Bakal · 1.25 kg (1¼) × ₱15.00 = ₱18.75'),
+          findsOneWidget,
+        );
+
         // Select Bote (per piraso)
         await tester.tap(find.byKey(const Key('chip_bote')));
         await tester.pump();
 
-        // Verify quick-add keys switch to +1, +5, +10, +20
-        expect(find.byKey(const Key('quick_add_pc_10')), findsOneWidget);
+        // Verify quick-add keys switch to 3 whole-number buttons: +1, +5, +10
+        expect(find.byKey(const Key('quick_add_pc_1')), findsOneWidget);
         expect(find.byKey(const Key('quick_add_pc_5')), findsOneWidget);
+        expect(find.byKey(const Key('quick_add_pc_10')), findsOneWidget);
+        expect(find.byKey(const Key('quick_add_pc_20')), findsNothing);
 
         // Tap +10 and +5 -> 15 pcs of Bote @ ₱1.00 = ₱15.00
         await tester.tap(find.byKey(const Key('quick_add_pc_10')));
@@ -112,7 +141,8 @@ void main() {
         // Verify decimal key is disabled for per-piece item
         await tester.tap(find.byKey(const Key('key_dot')));
         await tester.pump();
-        expect(find.text('15 pcs × ₱1.00/pc'), findsOneWidget);
+        expect(find.text('15 pcs'), findsOneWidget);
+        expect(find.text('× ₱1.00/pc'), findsOneWidget);
 
         // Grand total should now be ₱18.75 + ₱15.00 = ₱33.75
         expect(find.text('₱33.75'), findsOneWidget);

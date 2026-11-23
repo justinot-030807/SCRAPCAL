@@ -34,6 +34,10 @@ class AppColors {
   static const Color dangerBg = Color(0xFFFEF2F2);
   static const Color dangerBorder = Color(0xFFFCA5A5);
 
+  // Distinct Amber/Orange for SAVE / TAPOS NA finalize action
+  static const Color saveAmber = Color(0xFFD97706);
+  static const Color saveAmberDark = Color(0xFFB45309);
+
   static const Color accentGreen = Color(0xFF15803D);
   static const Color accentGreenBg = Color(0xFFDCFCE7);
 }
