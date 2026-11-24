@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../l10n/app_strings.dart';
 import '../models/scrap_models.dart';
 
 class StorageService {
   static const String _itemsKey = 'scrapcal_items_v1';
   static const String _ticketKey = 'scrapcal_active_ticket_v1';
   static const String _historyKey = 'scrapcal_history_v1';
+  static const String _languageKey = 'scrapcal_language_v1';
+  static const String _darkModeKey = 'scrapcal_dark_mode_v1';
 
   final SharedPreferences _prefs;
 
@@ -14,6 +17,22 @@ class StorageService {
   static Future<StorageService> init() async {
     final prefs = await SharedPreferences.getInstance();
     return StorageService(prefs);
+  }
+
+  AppLanguage loadLanguage() {
+    return AppLanguage.fromCode(_prefs.getString(_languageKey));
+  }
+
+  Future<void> saveLanguage(AppLanguage language) async {
+    await _prefs.setString(_languageKey, language.code);
+  }
+
+  bool loadDarkMode() {
+    return _prefs.getBool(_darkModeKey) ?? false;
+  }
+
+  Future<void> saveDarkMode(bool isDark) async {
+    await _prefs.setBool(_darkModeKey, isDark);
   }
 
   List<ScrapItem> loadScrapItems() {

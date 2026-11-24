@@ -83,7 +83,7 @@ class ScrapMath {
     if (clean <= 0) return null;
     final whole = clean.floor();
     final remMillis = ((clean - whole) * 1000).round();
-    String?glyph;
+    String? glyph;
     if (remMillis == 250) {
       glyph = '¼';
     } else if (remMillis == 500) {
@@ -275,15 +275,44 @@ class ScrapTransaction {
   final DateTime timestamp;
   final List<TicketLine> lines;
   final double grandTotal;
+  final String? recipientName;
 
   const ScrapTransaction({
     required this.id,
     required this.timestamp,
     required this.lines,
     required this.grandTotal,
+    this.recipientName,
   });
 
   String get formattedTimestamp => ScrapMath.formatTimestamp(timestamp);
+
+  String? get normalizedRecipientName {
+    final trimmed = recipientName?.trim();
+    if (trimmed == null || trimmed.isEmpty) return null;
+    return trimmed;
+  }
+
+  ScrapTransaction copyWith({
+    String? id,
+    DateTime? timestamp,
+    List<TicketLine>? lines,
+    double? grandTotal,
+    String? recipientName,
+    bool clearRecipientName = false,
+  }) {
+    final nextName = clearRecipientName
+        ? null
+        : (recipientName ?? this.recipientName);
+    final trimmed = nextName?.trim();
+    return ScrapTransaction(
+      id: id ?? this.id,
+      timestamp: timestamp ?? this.timestamp,
+      lines: lines ?? this.lines,
+      grandTotal: grandTotal ?? this.grandTotal,
+      recipientName: (trimmed == null || trimmed.isEmpty) ? null : trimmed,
+    );
+  }
 
   factory ScrapTransaction.fromJson(Map<String, dynamic> json) {
     final rawLines = (json['lines'] as List<dynamic>?) ?? const [];
@@ -295,6 +324,8 @@ class ScrapTransaction {
       0.0,
       (sum, item) => ScrapMath.roundPeso(sum + item.subtotal),
     );
+    final rawName = json['recipientName'] as String?;
+    final trimmedName = rawName?.trim();
     return ScrapTransaction(
       id: (json['id'] as String?) ?? '',
       timestamp:
@@ -304,13 +335,23 @@ class ScrapTransaction {
       grandTotal: ScrapMath.roundPeso(
         ((json['grandTotal'] as num?)?.toDouble()) ?? computedTotal,
       ),
+      recipientName: (trimmedName == null || trimmedName.isEmpty)
+          ? null
+          : trimmedName,
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'timestamp': timestamp.toIso8601String(),
-    'lines': lines.map((e) => e.toJson()).toList(),
-    'grandTotal': ScrapMath.roundPeso(grandTotal),
-  };
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{
+      'id': id,
+      'timestamp': timestamp.toIso8601String(),
+      'lines': lines.map((e) => e.toJson()).toList(),
+      'grandTotal': ScrapMath.roundPeso(grandTotal),
+    };
+    final name = normalizedRecipientName;
+    if (name != null) {
+      map['recipientName'] = name;
+    }
+    return map;
+  }
 }

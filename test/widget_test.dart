@@ -25,34 +25,44 @@ void main() {
       );
     });
 
-    test('serializes and deserializes ScrapTransaction cleanly', () {
-      final line = TicketLine(
-        id: 'l1',
-        itemId: 'bakal',
-        itemName: 'Bakal',
-        unit: ScrapUnit.perKg,
-        quantity: 1.25,
-        unitPrice: 15.0,
-      );
-      final tx = ScrapTransaction(
-        id: 't1',
-        timestamp: DateTime(2026, 11, 23, 11, 20),
-        lines: [line],
-        grandTotal: 18.75,
-      );
+    test(
+      'serializes and deserializes ScrapTransaction with optional recipientName backwards-compatibly',
+      () {
+        final line = TicketLine(
+          id: 'l1',
+          itemId: 'bakal',
+          itemName: 'Bakal',
+          unit: ScrapUnit.perKg,
+          quantity: 1.25,
+          unitPrice: 15.0,
+        );
 
-      final restored = ScrapTransaction.fromJson(tx.toJson());
-      expect(restored.id, equals('t1'));
-      expect(restored.grandTotal, equals(18.75));
-      expect(
-        restored.lines.first.formattedTapeSummary,
-        equals('Bakal · 1.25 kg (1¼) × ₱15.00 = ₱18.75'),
-      );
-      expect(restored.formattedTimestamp, equals('Nov 23 · 11:20 AM'));
-    });
+        // Legacy JSON without recipientName
+        final legacyJson = <String, dynamic>{
+          'id': 't0',
+          'timestamp': DateTime(2026, 11, 23, 11, 20).toIso8601String(),
+          'lines': [line.toJson()],
+          'grandTotal': 18.75,
+        };
+        final legacyTx = ScrapTransaction.fromJson(legacyJson);
+        expect(legacyTx.recipientName, isNull);
+        expect(legacyTx.grandTotal, equals(18.75));
+        expect(
+          legacyTx.lines.first.formattedTapeSummary,
+          equals('Bakal · 1.25 kg (1¼) × ₱15.00 = ₱18.75'),
+        );
+        expect(legacyTx.formattedTimestamp, equals('Nov 23 · 11:20 AM'));
+
+        // New JSON with recipientName
+        final namedTx = legacyTx.copyWith(recipientName: 'Mang Juan');
+        final restored = ScrapTransaction.fromJson(namedTx.toJson());
+        expect(restored.recipientName, equals('Mang Juan'));
+        expect(restored.normalizedRecipientName, equals('Mang Juan'));
+      },
+    );
   });
 
-  group('SCRAPCAL Calculator Widget Flow', () {
+  group('SCRAPCAL Simplified UI, Drawer, Settings & Receipt Flow', () {
     late StorageService storage;
 
     setUp(() async {
@@ -61,114 +71,186 @@ void main() {
     });
 
     testWidgets(
-      'computes kg fractions, switches to per-piraso increments, confirms Bagong Lista, and saves ticket to History',
+      'renders minimalist top bar, removes quick-add row, types decimals, saves to History, and updates PNG receipt recipient',
       (WidgetTester tester) async {
+        // Test under large system font scale (2.0x) to verify clamped text scaling prevents overflow
+        tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
         await tester.pumpWidget(ScrapCalApp(storage: storage));
 
-        // Verify instant launch into calculator with 2-row seeded default chips & draft label
+        // Verify minimalist top bar (menu icon + SCRAPCAL only, no Presyo/History buttons on bar)
+        expect(find.byKey(const Key('drawer_menu_btn')), findsOneWidget);
         expect(find.text('SCRAPCAL'), findsOneWidget);
-        expect(find.text('Tinitimbang ngayon:'), findsOneWidget);
+        expect(find.text('Presyo'), findsNothing);
+        expect(find.text('History'), findsNothing);
+
+        // Verify quick-add row is completely removed
+        expect(find.text('+1/4'), findsNothing);
+        expect(find.text('+1/2'), findsNothing);
+        expect(find.text('+3/4'), findsNothing);
+        expect(find.text('+10'), findsNothing);
+
+        // Verify single-language Tagalog labels (no double/bilingual labels)
+        expect(find.text('Kabuuan'), findsOneWidget);
+        expect(find.text('KABUUAN / TOTAL'), findsNothing);
+        expect(find.text('Ulit'), findsOneWidget);
+        expect(find.text('+ Dagdag'), findsOneWidget);
+        expect(find.text('Save'), findsOneWidget);
+        expect(find.text('TAPOS NA'), findsNothing);
+
+        // Verify single-row scrap chips
         expect(find.text('Bakal ₱15/kg'), findsOneWidget);
         expect(find.text('Plastic ₱10/kg'), findsOneWidget);
         expect(find.text('Tanso ₱350/kg'), findsOneWidget);
         expect(find.text('Bote ₱1/pc'), findsOneWidget);
-        expect(find.text('ULITIN'), findsOneWidget);
-        expect(find.text('Bagong Lista'), findsOneWidget);
 
-        // Verify 3 kg quick-add fraction keys are visible for Bakal (no redundant +1.00 key)
-        expect(find.byKey(const Key('quick_add_kg_025')), findsOneWidget);
-        expect(find.byKey(const Key('quick_add_kg_050')), findsOneWidget);
-        expect(find.byKey(const Key('quick_add_kg_075')), findsOneWidget);
-        expect(find.byKey(const Key('quick_add_kg_100')), findsNothing);
-
-        // Tap digit 1 on numpad and +1/4 quick-add -> 1.25 kg (1¼) of Bakal @ ₱15.00 = ₱18.75
+        // Type 1.25 kg directly on numpad for Bakal @ ₱15.00 = ₱18.75
         await tester.tap(find.byKey(const Key('key_1')));
         await tester.pump();
-        await tester.tap(find.byKey(const Key('quick_add_kg_025')));
+        await tester.tap(find.byKey(const Key('key_dot')));
+        await tester.pump();
+        await tester.tap(find.byKey(const Key('key_2')));
+        await tester.pump();
+        await tester.tap(find.byKey(const Key('key_5')));
         await tester.pump();
 
         expect(find.text('1.25 kg (1¼)'), findsOneWidget);
         expect(find.text('× ₱15.00/kg'), findsOneWidget);
-        expect(find.text('₱18.75'), findsNWidgets(2)); // subtotal & grand total
+        expect(find.text('₱18.75'), findsNWidgets(2));
 
-        // Test ULITIN and long-press backspace clearing input
-        await tester.tap(find.byKey(const Key('key_clear')));
-        await tester.pump();
-        expect(find.text('0 kg'), findsOneWidget);
-
-        // Re-enter 1.25 kg and add to list
-        await tester.tap(find.byKey(const Key('key_1')));
-        await tester.pump();
-        await tester.tap(find.byKey(const Key('quick_add_kg_025')));
-        await tester.pump();
-
-        // Tap + DAGDAG to append Bakal to the running ticket tape
+        // Tap + Dagdag -> adds to tape and immediately resets active input to 0 kg
         await tester.tap(find.byKey(const Key('key_dagdag')));
         await tester.pump();
 
+        expect(find.text('0 kg'), findsOneWidget);
         expect(
           find.text('Bakal · 1.25 kg (1¼) × ₱15.00 = ₱18.75'),
           findsOneWidget,
         );
 
-        // Verify Bagong Lista confirmation dialog protects against accidental clears
-        await tester.tap(find.byKey(const Key('reset_ticket_btn')));
+        // Select Bote (per piraso) -> '.' must be disabled
+        await tester.ensureVisible(find.byKey(const Key('chip_bote')));
         await tester.pumpAndSettle();
-        expect(find.text('Burahin lahat ng nakalista?'), findsOneWidget);
-        await tester.tap(find.text('Hindi'));
-        await tester.pumpAndSettle();
-        expect(
-          find.text('Bakal · 1.25 kg (1¼) × ₱15.00 = ₱18.75'),
-          findsOneWidget,
-        );
-
-        // Select Bote (per piraso)
         await tester.tap(find.byKey(const Key('chip_bote')));
         await tester.pump();
 
-        // Verify quick-add keys switch to 3 whole-number buttons: +1, +5, +10
-        expect(find.byKey(const Key('quick_add_pc_1')), findsOneWidget);
-        expect(find.byKey(const Key('quick_add_pc_5')), findsOneWidget);
-        expect(find.byKey(const Key('quick_add_pc_10')), findsOneWidget);
-        expect(find.byKey(const Key('quick_add_pc_20')), findsNothing);
-
-        // Tap +10 and +5 -> 15 pcs of Bote @ ₱1.00 = ₱15.00
-        await tester.tap(find.byKey(const Key('quick_add_pc_10')));
+        await tester.tap(find.byKey(const Key('key_1')));
         await tester.pump();
-        await tester.tap(find.byKey(const Key('quick_add_pc_5')));
-        await tester.pump();
-
-        // Verify decimal key is disabled for per-piece item
         await tester.tap(find.byKey(const Key('key_dot')));
         await tester.pump();
-        expect(find.text('15 pcs'), findsOneWidget);
-        expect(find.text('× ₱1.00/pc'), findsOneWidget);
+        await tester.tap(find.byKey(const Key('key_5')));
+        await tester.pump();
 
-        // Grand total should now be ₱18.75 + ₱15.00 = ₱33.75
+        expect(find.text('15 pcs'), findsOneWidget);
         expect(find.text('₱33.75'), findsOneWidget);
 
-        // Tap SAVE (automatically includes active 15 pcs Bote + tape Bakal)
+        // Tap Save -> saves transaction and resets ticket
         await tester.tap(find.byKey(const Key('key_save')));
         await tester.pump();
 
-        // Open History screen and verify saved transaction & Total Ngayon
-        await tester.tap(find.byKey(const Key('nav_history_btn')));
+        // Open Hamburger Drawer and verify menu items + pinned developer credit
+        await tester.tap(find.byKey(const Key('drawer_menu_btn')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Junkshop Calculator'), findsOneWidget);
+        expect(find.text('Developed by Justine S. Lachica'), findsOneWidget);
+        expect(find.byKey(const Key('drawer_presyo_item')), findsOneWidget);
+        expect(find.byKey(const Key('drawer_history_item')), findsOneWidget);
+        expect(find.byKey(const Key('drawer_settings_item')), findsOneWidget);
+
+        // Navigate to History via Drawer
+        await tester.tap(find.byKey(const Key('drawer_history_item')));
         await tester.pumpAndSettle();
 
         expect(find.text('Total Ngayon'), findsOneWidget);
-        expect(find.byKey(const Key('today_total_payout')), findsOneWidget);
         expect(find.text('₱33.75'), findsNWidgets(2));
-        expect(find.text('Bakal · 1.25 kg (1¼) × ₱15.00'), findsOneWidget);
-        expect(find.text('Bote · 15 pcs × ₱1.00'), findsOneWidget);
+        expect(find.text('Resibo'), findsOneWidget);
+
+        // Open Receipt Preview modal and enter optional recipient name
+        await tester.tap(find.text('Resibo'));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('receipt_paper_card')), findsOneWidget);
+        expect(find.text('RESIBO'), findsOneWidget);
+        expect(find.text('Salamat!'), findsOneWidget);
+        expect(find.byKey(const Key('receipt_save_png_btn')), findsOneWidget);
+        expect(find.byKey(const Key('receipt_share_png_btn')), findsOneWidget);
+
+        // Enter recipient name -> updates live preview and persists to History
+        await tester.enterText(
+          find.byKey(const Key('receipt_recipient_field')),
+          'Mang Juan',
+        );
+        await tester.pump();
+
+        expect(
+          find.byKey(const Key('receipt_preview_recipient')),
+          findsOneWidget,
+        );
+        expect(find.text('Pangalan: Mang Juan'), findsNWidgets(2));
+
+        // Close Receipt modal and verify recipient persists on History card & storage
+        await tester.tap(find.byIcon(Icons.close));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Pangalan: Mang Juan'), findsOneWidget);
+        expect(
+          storage.loadHistory().first.recipientName,
+          equals('Mang Juan'),
+        );
       },
     );
 
-    testWidgets('adds custom scrap item in Presyo screen', (
+    testWidgets(
+      'navigates to Settings via Drawer, switches to English and Dark Mode, and updates UI live',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(ScrapCalApp(storage: storage));
+
+        // Open Drawer -> Settings
+        await tester.tap(find.byKey(const Key('drawer_menu_btn')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('drawer_settings_item')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Wika'), findsOneWidget);
+        expect(find.text('Tema'), findsOneWidget);
+        expect(find.text('Developed by Justine S. Lachica'), findsOneWidget);
+
+        // Switch Language to English and Theme to Dark Mode
+        await tester.tap(find.byKey(const Key('lang_english_btn')));
+        await tester.pumpAndSettle();
+        expect(find.text('Language'), findsOneWidget);
+        expect(find.text('Theme'), findsOneWidget);
+
+        await tester.tap(find.byKey(const Key('theme_dark_btn')));
+        await tester.pumpAndSettle();
+
+        // Navigate back to Calculator
+        await tester.pageBack();
+        await tester.pumpAndSettle();
+
+        // Verify Calculator updated to English + Dark Mode (#121212 scaffold)
+        expect(find.text('Total'), findsOneWidget);
+        expect(find.text('Clear'), findsOneWidget);
+        expect(find.text('+ Add'), findsNWidgets(2)); // selector chip + keypad key
+        expect(find.text('Current item:'), findsOneWidget);
+
+        final scaffold = tester.widget<Scaffold>(find.byType(Scaffold).first);
+        expect(scaffold.backgroundColor, equals(const Color(0xFF121212)));
+        expect(storage.loadDarkMode(), isTrue);
+        expect(storage.loadLanguage().code, equals('en'));
+      },
+    );
+
+    testWidgets('adds custom scrap item in Presyo via Drawer', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(ScrapCalApp(storage: storage));
 
-      await tester.tap(find.byKey(const Key('nav_presyo_btn')));
+      await tester.tap(find.byKey(const Key('drawer_menu_btn')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('drawer_presyo_item')));
       await tester.pumpAndSettle();
 
       await tester.enterText(
@@ -182,7 +264,6 @@ void main() {
       await tester.tap(find.byKey(const Key('add_scrap_submit_btn')));
       await tester.pumpAndSettle();
 
-      // Navigate back to Calculator
       await tester.pageBack();
       await tester.pumpAndSettle();
 
